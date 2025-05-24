@@ -1,7 +1,7 @@
 import pandas as pd
 from typing import List, Optional, Dict, Any
-from models import VM, VMRecommendation, ComparisonSummary, PriceRange, Requirements, WorkloadType
-from duckdb_loader import duckdb_loader
+from ..models import VM, VMRecommendation, ComparisonSummary, PriceRange, Requirements, WorkloadType
+from ..database.duckdb_loader import duckdb_loader
 import logging
 
 logger = logging.getLogger(__name__)

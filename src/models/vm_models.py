@@ -1,10 +1,14 @@
+"""VM-related data models"""
+
 from pydantic import BaseModel
-from typing import Optional, List, Dict, Any
+from typing import Optional, List
 from enum import Enum
+
 
 class SortOrder(str, Enum):
     asc = "asc"
     desc = "desc"
+
 
 class SortBy(str, Enum):
     price = "price"
@@ -13,11 +17,13 @@ class SortBy(str, Enum):
     memory = "memory"
     gpu_count = "gpu_count"
 
+
 class WorkloadType(str, Enum):
     compute = "compute"
     memory = "memory"
     gpu = "gpu"
     balanced = "balanced"
+
 
 class VM(BaseModel):
     provider: str
@@ -33,13 +39,16 @@ class VM(BaseModel):
     availability_zone: Optional[str] = None
     generation: Optional[str] = None
 
+
 class VMCompareRequest(BaseModel):
     provider: str
     instance_type: str
     region: str
 
+
 class CompareRequest(BaseModel):
     vms: List[VMCompareRequest]
+
 
 class Requirements(BaseModel):
     min_vcpus: Optional[float] = None
@@ -49,45 +58,24 @@ class Requirements(BaseModel):
     preferred_regions: Optional[List[str]] = None
     workload_type: Optional[WorkloadType] = WorkloadType.balanced
 
+
 class RecommendationRequest(BaseModel):
     requirements: Requirements
+
 
 class VMRecommendation(VM):
     score: float
     reasoning: str
+
 
 class PriceRange(BaseModel):
     min: float
     max: float
     avg: float
 
+
 class ComparisonSummary(BaseModel):
     cheapest: VM
     most_powerful: VM
     best_value: VM
     price_difference: PriceRange
-
-class ProvidersResponse(BaseModel):
-    providers: List[str]
-
-class VMsResponse(BaseModel):
-    vms: List[VM]
-    total_count: int
-    filtered_count: int
-
-class CompareResponse(BaseModel):
-    comparison: List[VM]
-    summary: ComparisonSummary
-
-class RecommendationResponse(BaseModel):
-    recommendations: List[VMRecommendation]
-
-class RegionsResponse(BaseModel):
-    regions: List[str]
-
-class StatsResponse(BaseModel):
-    total_vms: int
-    providers_count: int
-    gpu_instances_count: int
-    regions_count: int
-    price_range: PriceRange

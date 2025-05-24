@@ -331,18 +331,43 @@ Error responses include a `detail` field with more information:
 
 ### Project Structure
 ```
-├── main.py                  # FastAPI application and endpoints
-├── models.py               # Pydantic models and data structures
-├── duckdb_loader.py        # DuckDB data loading and management
-├── duckdb_vm_service.py    # Business logic using DuckDB
-├── data_loader.py          # Legacy CSV data loading (deprecated)
-├── vm_service.py           # Legacy business logic (deprecated)
-├── api_spec.yaml           # OpenAPI specification
-├── test_api.py             # API test script
-├── test_duckdb.py          # DuckDB functionality tests
-├── requirements.txt        # Python dependencies
-├── vm_catalog.duckdb       # DuckDB database file (auto-generated)
-└── README.md               # Project documentation
+├── main.py                     # Application entry point
+├── setup.py                    # Package setup configuration
+├── Makefile                    # Development commands
+├── Dockerfile                  # Docker container configuration
+├── docker-compose.yml          # Docker Compose configuration
+├── requirements.txt            # Python dependencies
+├── vm_catalog.duckdb          # DuckDB database file (auto-generated)
+├── README.md                  # Project documentation
+├── .gitignore                 # Git ignore rules
+├── src/                       # Source code package
+│   ├── __init__.py
+│   ├── api/                   # API layer
+│   │   ├── __init__.py
+│   │   └── main.py           # FastAPI application and endpoints
+│   ├── models/               # Data models
+│   │   ├── __init__.py
+│   │   ├── vm_models.py      # VM-related models
+│   │   └── response_models.py # API response models
+│   ├── services/             # Business logic
+│   │   ├── __init__.py
+│   │   └── duckdb_vm_service.py # VM service using DuckDB
+│   ├── database/             # Database layer
+│   │   ├── __init__.py
+│   │   └── duckdb_loader.py  # DuckDB data loading and management
+│   └── core/                 # Core utilities
+│       ├── __init__.py
+│       └── logging.py        # Logging configuration
+├── tests/                    # Test suite
+│   ├── __init__.py
+│   ├── test_api.py          # API test script
+│   ├── test_duckdb.py       # DuckDB functionality tests
+│   └── test_parameter_fix.py # Parameter testing
+├── docs/                     # Documentation
+│   └── api_spec.yaml        # OpenAPI specification
+└── config/                   # Configuration
+    ├── __init__.py
+    └── settings.py          # Application settings
 ```
 
 ### Key Components
