@@ -1,0 +1,365 @@
+openapi: 3.0.3
+info:
+  title: Cloud VM Comparison API
+  description: API for comparing virtual machines across multiple cloud providers
+  version: 1.0.0
+  contact:
+    name: Cloud VM Comparison API
+    email: support@example.com
+
+servers:
+  - url: http://localhost:8000
+    description: Development server
+
+paths:
+  /providers:
+    get:
+      summary: Get list of available cloud providers
+      description: Returns a list of all supported cloud providers
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  providers:
+                    type: array
+                    items:
+                      type: string
+                    example: ["aws", "azure", "gcp", "ibm"]
+
+  /vms:
+    get:
+      summary: Get VMs with filtering options
+      description: Retrieve VMs from one or more cloud providers with optional filtering
+      parameters:
+        - name: providers
+          in: query
+          description: Comma-separated list of cloud providers
+          schema:
+            type: string
+            example: "aws,azure,gcp"
+        - name: min_vcpus
+          in: query
+          description: Minimum number of vCPUs
+          schema:
+            type: number
+            example: 2
+        - name: max_vcpus
+          in: query
+          description: Maximum number of vCPUs
+          schema:
+            type: number
+            example: 16
+        - name: min_memory
+          in: query
+          description: Minimum memory in GiB
+          schema:
+            type: number
+            example: 4
+        - name: max_memory
+          in: query
+          description: Maximum memory in GiB
+          schema:
+            type: number
+            example: 64
+        - name: has_gpu
+          in: query
+          description: Filter for instances with GPU accelerators
+          schema:
+            type: boolean
+            example: true
+        - name: gpu_name
+          in: query
+          description: Filter by specific GPU name
+          schema:
+            type: string
+            example: "Tesla V100"
+        - name: region
+          in: query
+          description: Filter by region
+          schema:
+            type: string
+            example: "us-east-1"
+        - name: max_price
+          in: query
+          description: Maximum price per hour
+          schema:
+            type: number
+            example: 5.0
+        - name: sort_by
+          in: query
+          description: Sort results by field
+          schema:
+            type: string
+            enum: [price, spot_price, vcpus, memory, gpu_count]
+            example: "price"
+        - name: sort_order
+          in: query
+          description: Sort order
+          schema:
+            type: string
+            enum: [asc, desc]
+            default: asc
+        - name: limit
+          in: query
+          description: Maximum number of results
+          schema:
+            type: integer
+            default: 100
+            example: 50
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  vms:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/VM'
+                  total_count:
+                    type: integer
+                    example: 150
+                  filtered_count:
+                    type: integer
+                    example: 25
+
+  /vms/compare:
+    post:
+      summary: Compare specific VMs
+      description: Compare multiple VMs side by side
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                vms:
+                  type: array
+                  items:
+                    type: object
+                    properties:
+                      provider:
+                        type: string
+                        example: "aws"
+                      instance_type:
+                        type: string
+                        example: "m5.large"
+                      region:
+                        type: string
+                        example: "us-east-1"
+                  example:
+                    - provider: "aws"
+                      instance_type: "m5.large"
+                      region: "us-east-1"
+                    - provider: "azure"
+                      instance_type: "Standard_D2s_v3"
+                      region: "eastus"
+      responses:
+        '200':
+          description: Comparison results
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  comparison:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/VM'
+                  summary:
+                    $ref: '#/components/schemas/ComparisonSummary'
+
+  /vms/recommendations:
+    post:
+      summary: Get VM recommendations
+      description: Get VM recommendations based on requirements
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                requirements:
+                  type: object
+                  properties:
+                    min_vcpus:
+                      type: number
+                      example: 4
+                    min_memory:
+                      type: number
+                      example: 8
+                    gpu_required:
+                      type: boolean
+                      example: false
+                    max_budget:
+                      type: number
+                      example: 2.0
+                    preferred_regions:
+                      type: array
+                      items:
+                        type: string
+                      example: ["us-east-1", "us-west-2"]
+                    workload_type:
+                      type: string
+                      enum: [compute, memory, gpu, balanced]
+                      example: "balanced"
+      responses:
+        '200':
+          description: VM recommendations
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  recommendations:
+                    type: array
+                    items:
+                      allOf:
+                        - $ref: '#/components/schemas/VM'
+                        - type: object
+                          properties:
+                            score:
+                              type: number
+                              description: Recommendation score (0-100)
+                              example: 85.5
+                            reasoning:
+                              type: string
+                              example: "Best price-performance ratio for balanced workloads"
+
+  /regions:
+    get:
+      summary: Get available regions by provider
+      parameters:
+        - name: provider
+          in: query
+          description: Cloud provider name
+          schema:
+            type: string
+            example: "aws"
+      responses:
+        '200':
+          description: Available regions
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  regions:
+                    type: array
+                    items:
+                      type: string
+                    example: ["us-east-1", "us-west-2", "eu-west-1"]
+
+  /stats:
+    get:
+      summary: Get statistics about the VM catalog
+      responses:
+        '200':
+          description: Catalog statistics
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  total_vms:
+                    type: integer
+                    example: 15420
+                  providers_count:
+                    type: integer
+                    example: 15
+                  gpu_instances_count:
+                    type: integer
+                    example: 2340
+                  regions_count:
+                    type: integer
+                    example: 156
+                  price_range:
+                    type: object
+                    properties:
+                      min:
+                        type: number
+                        example: 0.018
+                      max:
+                        type: number
+                        example: 45.67
+                      avg:
+                        type: number
+                        example: 2.34
+
+components:
+  schemas:
+    VM:
+      type: object
+      properties:
+        provider:
+          type: string
+          example: "aws"
+        instance_type:
+          type: string
+          example: "m5.large"
+        vcpus:
+          type: number
+          example: 2
+        memory_gib:
+          type: number
+          example: 8
+        accelerator_name:
+          type: string
+          nullable: true
+          example: "Tesla V100"
+        accelerator_count:
+          type: number
+          nullable: true
+          example: 1
+        gpu_info:
+          type: string
+          nullable: true
+          example: "{'Gpus': [{'Name': 'Tesla V100', 'Count': 1, 'MemoryInfo': {'SizeInMiB': 16384}}]}"
+        price:
+          type: number
+          example: 0.096
+        spot_price:
+          type: number
+          nullable: true
+          example: 0.029
+        region:
+          type: string
+          example: "us-east-1"
+        availability_zone:
+          type: string
+          nullable: true
+          example: "us-east-1a"
+        generation:
+          type: string
+          nullable: true
+          example: "V3"
+
+    ComparisonSummary:
+      type: object
+      properties:
+        cheapest:
+          $ref: '#/components/schemas/VM'
+        most_powerful:
+          $ref: '#/components/schemas/VM'
+        best_value:
+          $ref: '#/components/schemas/VM'
+        price_difference:
+          type: object
+          properties:
+            min:
+              type: number
+              example: 0.096
+            max:
+              type: number
+              example: 0.384
+            avg:
+              type: number
+              example: 0.24
