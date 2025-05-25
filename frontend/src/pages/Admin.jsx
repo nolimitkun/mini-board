@@ -76,16 +76,6 @@ const Admin = () => {
   return (
     <Layout>
       <div className="space-y-6">
-        {/* Header */}
-        <div className="flex items-center space-x-3">
-          <Settings className="w-8 h-8 text-primary-600" />
-          <div>
-            <h1 className="text-3xl font-bold text-gray-900">System Administration</h1>
-            <p className="text-gray-600 mt-1">
-              Monitor system health and manage VM catalog data
-            </p>
-          </div>
-        </div>
 
         {/* System Status */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">

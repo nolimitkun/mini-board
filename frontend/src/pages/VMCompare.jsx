@@ -69,17 +69,6 @@ const VMCompare = () => {
   return (
     <Layout>
       <div className="space-y-6">
-        {/* Header */}
-        <div className="flex items-center space-x-3">
-          <GitCompare className="w-8 h-8 text-primary-600" />
-          <div>
-            <h1 className="text-3xl font-bold text-gray-900">Compare Virtual Machines</h1>
-            <p className="text-gray-600 mt-1">
-              Side-by-side comparison of VM specifications and pricing
-            </p>
-          </div>
-        </div>
-
         {/* Add VM Form */}
         <div className="card">
           <div className="card-header">

@@ -122,60 +122,12 @@ const VMBrowser = () => {
   return (
     <Layout>
       <div className="space-y-6">
-        {/* Header */}
-        <div>
-          <h1 className="text-3xl font-bold text-gray-900">Virtual Machines</h1>
-          <p className="text-gray-600 mt-1">
-            Compare VMs across {totalCount.toLocaleString()} instances from multiple cloud providers
-          </p>
-        </div>
-
         {/* Filters */}
         <VMFilters
           filters={filters}
           onFiltersChange={handleFiltersChange}
           onReset={handleFiltersReset}
         />
-
-        {/* Selected VMs Bar */}
-        {selectedVMs.length > 0 && (
-          <div className="bg-primary-50 border border-primary-200 rounded-lg p-4">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-primary-900">
-                  {selectedVMs.length} VM{selectedVMs.length !== 1 ? 's' : ''} selected for comparison
-                </p>
-                <p className="text-xs text-primary-700">
-                  {selectedVMs.map(vm => `${vm.provider} ${vm.instance_type}`).join(', ')}
-                </p>
-              </div>
-              <div className="flex items-center space-x-2">
-                <button
-                  onClick={() => {
-                    // Navigate to compare page with selected VMs
-                    const compareData = selectedVMs.map(vm => ({
-                      provider: vm.provider,
-                      instance_type: vm.instance_type,
-                      region: vm.region
-                    }));
-                    localStorage.setItem('compareVMs', JSON.stringify(compareData));
-                    window.location.href = '/compare';
-                  }}
-                  className="btn-primary"
-                  disabled={selectedVMs.length < 2}
-                >
-                  Compare Selected
-                </button>
-                <button
-                  onClick={() => setSelectedVMs([])}
-                  className="btn-secondary"
-                >
-                  Clear Selection
-                </button>
-              </div>
-            </div>
-          </div>
-        )}
 
         {/* Results */}
         <div className="space-y-4">
@@ -220,7 +172,6 @@ const VMBrowser = () => {
               {/* List Header */}
               <div className="bg-gray-50 border border-gray-200 rounded-lg p-3 text-sm font-medium text-gray-700">
                 <div className="grid grid-cols-12 gap-4 items-center">
-                  <div className="col-span-1">Select</div>
                   <button
                     onClick={() => handleSort('provider')}
                     className="col-span-2 flex items-center space-x-1 hover:text-gray-900 transition-colors text-left"
@@ -272,7 +223,7 @@ const VMBrowser = () => {
                   </button>
                   <button
                     onClick={() => handleSort('accelerator_count')}
-                    className="col-span-1 flex items-center space-x-1 hover:text-gray-900 transition-colors text-left"
+                    className="col-span-2 flex items-center space-x-1 hover:text-gray-900 transition-colors text-left"
                   >
                     <span>GPU</span>
                     {getSortIcon('accelerator_count')}
@@ -307,17 +258,6 @@ const VMBrowser = () => {
                     }`}
                   >
                     <div className="grid grid-cols-12 gap-4 items-center text-sm">
-                      {/* Select Button */}
-                      <div className="col-span-1">
-                        <button
-                          onClick={() => handleVMSelect(vm)}
-                          className={`btn text-xs ${
-                            isVMSelected(vm) ? 'btn-primary' : 'btn-secondary'
-                          }`}
-                        >
-                          {isVMSelected(vm) ? '✓' : '+'}
-                        </button>
-                      </div>
                       
                       {/* Provider */}
                       <div className="col-span-2">
@@ -378,7 +318,7 @@ const VMBrowser = () => {
                       </div>
                       
                       {/* GPU */}
-                      <div className="col-span-1">
+                      <div className="col-span-2">
                         {vm.accelerator_name ? (
                           <div className="text-green-700">
                             <div className="font-medium text-xs">

@@ -84,16 +84,6 @@ const VMRecommendations = () => {
   return (
     <Layout>
       <div className="space-y-6">
-        {/* Header */}
-        <div className="flex items-center space-x-3">
-          <Lightbulb className="w-8 h-8 text-primary-600" />
-          <div>
-            <h1 className="text-3xl font-bold text-gray-900">VM Recommendations</h1>
-            <p className="text-gray-600 mt-1">
-              Get personalized VM recommendations based on your workload requirements
-            </p>
-          </div>
-        </div>
 
         {/* Requirements Form */}
         <div className="card">

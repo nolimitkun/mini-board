@@ -193,20 +193,21 @@ const VMFilters = ({ filters, onFiltersChange, onReset }) => {
               <option value={1000}>1000 results</option>
             </select>
           </div>
+          {/* Clear Filters Button */}
+          <div className="flex justify-end">
+            {hasActiveFilters && (
+              <button
+                onClick={clearFilters}
+                className="btn-secondary flex items-center space-x-2 text-red-600 hover:text-red-700"
+              >
+                <X className="w-4 h-4" />
+                <span>Clear All</span>
+              </button>
+            )}
+          </div>
         </div>
 
-        {/* Clear Filters Button */}
-        <div className="flex justify-end border-t pt-2">
-          {hasActiveFilters && (
-            <button
-              onClick={clearFilters}
-              className="btn-secondary flex items-center space-x-2 text-red-600 hover:text-red-700"
-            >
-              <X className="w-4 h-4" />
-              <span>Clear All</span>
-            </button>
-          )}
-        </div>
+
       </div>
     </div>
   );
