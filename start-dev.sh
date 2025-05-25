@@ -47,15 +47,16 @@ fi
 
 source venv/bin/activate
 pip install -r requirements.txt > /dev/null 2>&1
+cd ..
 
 echo ""
 echo "🔧 Starting backend API server..."
 echo "   URL: http://localhost:8000"
 echo "   Docs: http://localhost:8000/docs"
-python main.py &
-BACKEND_PID=$!
 
-cd ..
+
+source backend/venv/bin/activate && python3 backend/main.py &
+BACKEND_PID=$!
 
 # Wait a moment for backend to start
 sleep 3

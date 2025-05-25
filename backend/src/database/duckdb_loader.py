@@ -18,8 +18,8 @@ class DuckDBLoader:
     def initialize_database(self):
         """Initialize DuckDB connection and create tables"""
         try:
-            # Create or connect to DuckDB database - use in-memory to avoid corruption
-            self.conn = duckdb.connect(':memory:')
+            # Create or connect to DuckDB database file
+            self.conn = duckdb.connect(self.db_path)
             
             # Create VMs table with relaxed constraints
             self.conn.execute("""
