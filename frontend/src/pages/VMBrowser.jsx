@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { useQuery } from 'react-query';
 import { vmApi } from '../services/api';
 import Layout from '../components/Layout/Layout';
@@ -6,17 +6,16 @@ import VMFilters from '../components/VMs/VMFilters';
 import VMCard from '../components/VMs/VMCard';
 import LoadingSpinner from '../components/Common/LoadingSpinner';
 import ErrorMessage from '../components/Common/ErrorMessage';
-import { Search, Grid, List } from 'lucide-react';
+import { Search, Grid, List, ChevronUp, ChevronDown } from 'lucide-react';
 
 const VMBrowser = () => {
   const [filters, setFilters] = useState({
     providers: [],
-    sort_by: 'price',
-    sort_order: 'asc',
     limit: 100
   });
   const [viewMode, setViewMode] = useState('grid'); // 'grid' or 'list'
   const [selectedVMs, setSelectedVMs] = useState([]);
+  const [sortConfig, setSortConfig] = useState({ key: 'price', direction: 'asc' });
 
   const {
     data: vmData,
@@ -39,8 +38,6 @@ const VMBrowser = () => {
   const handleFiltersReset = () => {
     setFilters({
       providers: [],
-      sort_by: 'price',
-      sort_order: 'asc',
       limit: 100
     });
   };
@@ -69,9 +66,58 @@ const VMBrowser = () => {
     );
   };
 
-  const vms = vmData?.data?.vms || [];
+  const rawVms = vmData?.data?.vms || [];
   const totalCount = vmData?.data?.total_count || 0;
   const filteredCount = vmData?.data?.filtered_count || 0;
+
+  // Sorting function
+  const handleSort = (key) => {
+    let direction = 'asc';
+    if (sortConfig.key === key && sortConfig.direction === 'asc') {
+      direction = 'desc';
+    }
+    setSortConfig({ key, direction });
+  };
+
+  // Sort VMs based on current sort configuration
+  const vms = useMemo(() => {
+    const sortableVMs = [...rawVms];
+    if (sortConfig.key) {
+      sortableVMs.sort((a, b) => {
+        let aValue = a[sortConfig.key];
+        let bValue = b[sortConfig.key];
+
+        // Handle null/undefined values
+        if (aValue === null || aValue === undefined) aValue = 0;
+        if (bValue === null || bValue === undefined) bValue = 0;
+
+        // Handle string comparisons
+        if (typeof aValue === 'string') {
+          aValue = aValue.toLowerCase();
+          bValue = bValue.toLowerCase();
+        }
+
+        if (aValue < bValue) {
+          return sortConfig.direction === 'asc' ? -1 : 1;
+        }
+        if (aValue > bValue) {
+          return sortConfig.direction === 'asc' ? 1 : -1;
+        }
+        return 0;
+      });
+    }
+    return sortableVMs;
+  }, [rawVms, sortConfig]);
+
+  // Get sort icon for column headers
+  const getSortIcon = (columnKey) => {
+    if (sortConfig.key !== columnKey) {
+      return <ChevronUp className="w-3 h-3 text-gray-400" />;
+    }
+    return sortConfig.direction === 'asc' ? 
+      <ChevronUp className="w-3 h-3 text-gray-600" /> : 
+      <ChevronDown className="w-3 h-3 text-gray-600" />;
+  };
 
   return (
     <Layout>
@@ -212,14 +258,62 @@ const VMBrowser = () => {
               <div className="bg-gray-50 border border-gray-200 rounded-lg p-3 text-sm font-medium text-gray-700">
                 <div className="grid grid-cols-12 gap-4 items-center">
                   <div className="col-span-1">Select</div>
-                  <div className="col-span-2">Provider</div>
-                  <div className="col-span-2">Instance Type</div>
-                  <div className="col-span-1">vCPUs</div>
-                  <div className="col-span-1">Memory</div>
-                  <div className="col-span-2">Region</div>
-                  <div className="col-span-1">Price/hr</div>
-                  <div className="col-span-1">Spot Price</div>
-                  <div className="col-span-1">GPU</div>
+                  <button
+                    onClick={() => handleSort('provider')}
+                    className="col-span-2 flex items-center space-x-1 hover:text-gray-900 transition-colors text-left"
+                  >
+                    <span>Provider</span>
+                    {getSortIcon('provider')}
+                  </button>
+                  <button
+                    onClick={() => handleSort('instance_type')}
+                    className="col-span-2 flex items-center space-x-1 hover:text-gray-900 transition-colors text-left"
+                  >
+                    <span>Instance Type</span>
+                    {getSortIcon('instance_type')}
+                  </button>
+                  <button
+                    onClick={() => handleSort('vcpus')}
+                    className="col-span-1 flex items-center space-x-1 hover:text-gray-900 transition-colors text-left"
+                  >
+                    <span>vCPUs</span>
+                    {getSortIcon('vcpus')}
+                  </button>
+                  <button
+                    onClick={() => handleSort('memory_gib')}
+                    className="col-span-1 flex items-center space-x-1 hover:text-gray-900 transition-colors text-left"
+                  >
+                    <span>Memory</span>
+                    {getSortIcon('memory_gib')}
+                  </button>
+                  <button
+                    onClick={() => handleSort('region')}
+                    className="col-span-2 flex items-center space-x-1 hover:text-gray-900 transition-colors text-left"
+                  >
+                    <span>Region</span>
+                    {getSortIcon('region')}
+                  </button>
+                  <button
+                    onClick={() => handleSort('price')}
+                    className="col-span-1 flex items-center space-x-1 hover:text-gray-900 transition-colors text-left"
+                  >
+                    <span>Price/hr</span>
+                    {getSortIcon('price')}
+                  </button>
+                  <button
+                    onClick={() => handleSort('spot_price')}
+                    className="col-span-1 flex items-center space-x-1 hover:text-gray-900 transition-colors text-left"
+                  >
+                    <span>Spot Price</span>
+                    {getSortIcon('spot_price')}
+                  </button>
+                  <button
+                    onClick={() => handleSort('accelerator_count')}
+                    className="col-span-1 flex items-center space-x-1 hover:text-gray-900 transition-colors text-left"
+                  >
+                    <span>GPU</span>
+                    {getSortIcon('accelerator_count')}
+                  </button>
                 </div>
               </div>
               

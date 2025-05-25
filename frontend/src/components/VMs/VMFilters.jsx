@@ -187,33 +187,6 @@ const VMFilters = ({ filters, onFiltersChange, onReset }) => {
             </select>
           </div>
 
-          {/* Sort Options */}
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Sort By
-            </label>
-            <div className="grid grid-cols-2 gap-2">
-              <select
-                value={filters.sort_by || 'price'}
-                onChange={(e) => handleInputChange('sort_by', e.target.value)}
-                className="input"
-              >
-                <option value="price">Price</option>
-                <option value="spot_price">Spot Price</option>
-                <option value="vcpus">vCPUs</option>
-                <option value="memory">Memory</option>
-                <option value="gpu_count">GPU Count</option>
-              </select>
-              <select
-                value={filters.sort_order || 'asc'}
-                onChange={(e) => handleInputChange('sort_order', e.target.value)}
-                className="input"
-              >
-                <option value="asc">Ascending</option>
-                <option value="desc">Descending</option>
-              </select>
-            </div>
-          </div>
 
           {/* Results Limit */}
           <div>
