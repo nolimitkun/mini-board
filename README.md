@@ -1,470 +1,257 @@
-# Cloud VM Comparison API
+# Cloud VM Comparison Platform
 
-A high-performance REST API for comparing virtual machines across multiple cloud providers using SkyPilot's cloud resource catalog data with DuckDB for fast querying.
+A full-stack application for comparing virtual machines across multiple cloud providers, featuring a React frontend and FastAPI backend with DuckDB for high-performance data queries.
+
+## Architecture
+
+This project is organized as a monorepo with separate frontend and backend applications:
+
+```
+mini-board/
+├── frontend/              # React frontend application
+│   ├── src/              # React components and pages
+│   ├── public/           # Static assets
+│   ├── package.json      # Node.js dependencies
+│   ├── Dockerfile        # Frontend container
+│   └── README.md         # Frontend documentation
+├── backend/              # FastAPI backend application
+│   ├── src/              # Python source code
+│   ├── config/           # Configuration files
+│   ├── tests/            # Test files
+│   ├── main.py           # Backend entry point
+│   ├── requirements.txt  # Python dependencies
+│   ├── Dockerfile        # Backend container
+│   └── README.md         # Backend documentation
+├── docs/                 # Project documentation
+├── docker-compose.yml    # Multi-container orchestration
+├── start-dev.sh          # Development startup script
+└── README.md             # This file
+```
 
 ## Features
 
-- **Multi-cloud support**: Compare VMs across 15+ cloud providers (AWS, Azure, GCP, IBM, and specialized GPU providers)
-- **High-performance database**: Uses DuckDB for fast analytical queries on VM data
-- **Auto-updating data**: Automatically loads latest VM data from SkyPilot's GitHub repository
-- **Advanced filtering**: Filter by CPU, memory, GPU, region, price, and more
-- **VM comparison**: Side-by-side comparison of specific VMs
-- **Smart recommendations**: Get VM recommendations based on workload requirements
-- **Comprehensive data**: Includes pricing, specifications, and availability zones
-- **Data management**: Preview, reload, and health check endpoints
+### Frontend (React)
+- **Modern UI**: Built with React and Tailwind CSS
+- **VM Browser**: Browse and filter VMs across providers
+- **Comparison Tool**: Side-by-side VM comparison
+- **Recommendations**: Smart VM recommendations based on requirements
+- **Statistics Dashboard**: Analytics and insights
+- **Admin Panel**: Data management interface
+- **Responsive Design**: Works on desktop and mobile
+
+### Backend (FastAPI)
+- **Multi-cloud Support**: 15+ cloud providers (AWS, Azure, GCP, etc.)
+- **High-Performance Database**: DuckDB for fast analytical queries
+- **Auto-updating Data**: Latest VM data from SkyPilot's catalog
+- **Advanced Filtering**: Filter by CPU, memory, GPU, region, price
+- **Smart Recommendations**: ML-based VM recommendations
+- **RESTful API**: Comprehensive REST API with OpenAPI docs
+- **Data Management**: Preview, reload, and health check endpoints
 
 ## Quick Start
 
-### 1. Install Dependencies
+### Option 1: Development Mode (Recommended)
+
+Use the provided development script to start both frontend and backend:
 
 ```bash
-pip install -r requirements.txt
+# Make the script executable
+chmod +x start-dev.sh
+
+# Start both services
+./start-dev.sh
 ```
 
-### 2. Start the API Server
+This will:
+- Start the backend API on http://localhost:8000
+- Start the frontend development server on http://localhost:3000
+- Install dependencies automatically
+- Provide live reloading for development
+
+### Option 2: Docker Compose
+
+Run the entire stack with Docker:
 
 ```bash
+# Build and start all services
+docker-compose up --build
+
+# Or run in background
+docker-compose up -d --build
+```
+
+Services will be available at:
+- Frontend: http://localhost:3000
+- Backend API: http://localhost:8000
+- API Documentation: http://localhost:8000/docs
+
+### Option 3: Manual Setup
+
+#### Backend Setup
+```bash
+cd backend
+python3 -m venv venv
+source venv/bin/activate  # On Windows: venv\Scripts\activate
+pip install -r requirements.txt
 python main.py
 ```
 
-The API will automatically:
-- Initialize a DuckDB database (`vm_catalog.duckdb`)
-- Download the latest VM data from SkyPilot's GitHub repository
-- Load data into the database for fast querying
+#### Frontend Setup
+```bash
+cd frontend
+npm install
+npm start
+```
 
-The API will be available at `http://localhost:8000`
+## API Documentation
 
-### 3. View API Documentation
+The backend provides a comprehensive REST API:
 
-- **Interactive docs**: http://localhost:8000/docs
-- **OpenAPI spec**: http://localhost:8000/openapi.json
+- **Interactive Docs**: http://localhost:8000/docs
+- **OpenAPI Spec**: http://localhost:8000/openapi.json
 - **ReDoc**: http://localhost:8000/redoc
 
-### 4. Test the API
-
-```bash
-python test_api.py
-```
-
-## API Endpoints
-
-### Core Endpoints
+### Key Endpoints
 
 | Endpoint | Method | Description |
 |----------|--------|-------------|
-| `/` | GET | API information and version |
-| `/providers` | GET | Get list of available cloud providers |
+| `/providers` | GET | List available cloud providers |
 | `/vms` | GET | Get VMs with filtering and sorting |
-| `/vms/compare` | POST | Compare specific VMs side by side |
-| `/vms/recommendations` | POST | Get VM recommendations based on requirements |
-| `/regions` | GET | Get available regions by provider |
-| `/stats` | GET | Get statistics about the VM catalog |
+| `/vms/compare` | POST | Compare specific VMs |
+| `/vms/recommendations` | POST | Get VM recommendations |
+| `/stats` | GET | Get catalog statistics |
+| `/health` | GET | Health check |
 
-### Data Management Endpoints
+## Development
 
-| Endpoint | Method | Description |
-|----------|--------|-------------|
-| `/preview` | GET | Preview sample data from the database |
-| `/reload` | POST | Reload all VM data from GitHub repository |
-| `/health` | GET | Health check and database status |
+### Frontend Development
 
-### Example Usage
+The frontend is built with:
+- **React 18**: Modern React with hooks
+- **Tailwind CSS**: Utility-first CSS framework
+- **React Router**: Client-side routing
+- **Axios**: HTTP client for API calls
 
-#### 1. Get All Providers
-```bash
-curl http://localhost:8000/providers
-```
+See [frontend/README.md](frontend/README.md) for detailed frontend documentation.
 
-#### 2. Find Cheapest VMs
-```bash
-curl "http://localhost:8000/vms?sort_by=price&limit=5"
-```
+### Backend Development
 
-#### 3. Find GPU Instances
-```bash
-curl "http://localhost:8000/vms?has_gpu=true&limit=10"
-```
+The backend is built with:
+- **FastAPI**: Modern Python web framework
+- **DuckDB**: High-performance analytical database
+- **Pydantic**: Data validation and serialization
+- **Uvicorn**: ASGI server
 
-#### 4. Filter by Specifications
-```bash
-curl "http://localhost:8000/vms?min_vcpus=4&min_memory=8&max_price=2.0&providers=aws,azure"
-```
+See [backend/README.md](backend/README.md) for detailed backend documentation.
 
-#### 5. Compare Specific VMs
-```bash
-curl -X POST http://localhost:8000/vms/compare \
-  -H "Content-Type: application/json" \
-  -d '{
-    "vms": [
-      {"provider": "aws", "instance_type": "m5.large", "region": "us-east-1"},
-      {"provider": "azure", "instance_type": "Standard_D2s_v3", "region": "eastus"}
-    ]
-  }'
-```
+### Project Scripts
 
-#### 6. Get Recommendations
-```bash
-curl -X POST http://localhost:8000/vms/recommendations \
-  -H "Content-Type: application/json" \
-  -d '{
-    "requirements": {
-      "min_vcpus": 4,
-      "min_memory": 8,
-      "gpu_required": false,
-      "max_budget": 1.0,
-      "workload_type": "balanced"
-    }
-  }'
-```
+- `start-dev.sh`: Start both frontend and backend in development mode
+- `docker-compose.yml`: Container orchestration for production
 
-#### 7. Preview Database Data
-```bash
-curl "http://localhost:8000/preview?max_rows=3"
-```
+### Environment Variables
 
-#### 8. Reload Data from GitHub
-```bash
-curl -X POST http://localhost:8000/reload
-```
+Create a `.env` file in the root directory:
 
-#### 9. Health Check
-```bash
-curl http://localhost:8000/health
-```
+```env
+# Backend
+LOG_LEVEL=INFO
+DB_PATH=./data/vm_catalog.duckdb
 
-## Query Parameters
-
-### VM Filtering (`/vms`)
-
-| Parameter | Type | Description |
-|-----------|------|-------------|
-| `providers` | string | Comma-separated list of providers (e.g., "aws,azure,gcp") |
-| `min_vcpus` | number | Minimum number of vCPUs |
-| `max_vcpus` | number | Maximum number of vCPUs |
-| `min_memory` | number | Minimum memory in GiB |
-| `max_memory` | number | Maximum memory in GiB |
-| `has_gpu` | boolean | Filter for GPU instances |
-| `gpu_name` | string | Filter by specific GPU name |
-| `region` | string | Filter by region |
-| `max_price` | number | Maximum price per hour |
-| `sort_by` | string | Sort by: price, spot_price, vcpus, memory, gpu_count |
-| `sort_order` | string | Sort order: asc, desc |
-| `limit` | integer | Maximum results (1-1000) |
-
-### Data Preview (`/preview`)
-
-| Parameter | Type | Description |
-|-----------|------|-------------|
-| `max_rows` | integer | Maximum sample rows to show (1-20) |
-
-## Response Examples
-
-### VM Object
-```json
-{
-  "provider": "aws",
-  "instance_type": "m5.large",
-  "vcpus": 2.0,
-  "memory_gib": 8.0,
-  "accelerator_name": null,
-  "accelerator_count": null,
-  "gpu_info": null,
-  "price": 0.096,
-  "spot_price": 0.029,
-  "region": "us-east-1",
-  "availability_zone": "us-east-1a",
-  "generation": "V5"
-}
-```
-
-### VMs Response with Counts
-```json
-{
-  "vms": [/* VM objects */],
-  "total_count": 15420,
-  "filtered_count": 156
-}
-```
-
-### Comparison Summary
-```json
-{
-  "comparison": [/* VM objects */],
-  "summary": {
-    "cheapest": {/* VM object */},
-    "most_powerful": {/* VM object */},
-    "best_value": {/* VM object */},
-    "price_difference": {
-      "min": 0.096,
-      "max": 0.384,
-      "avg": 0.24
-    }
-  }
-}
-```
-
-### Recommendation
-```json
-{
-  "recommendations": [
-    {
-      "provider": "aws",
-      "instance_type": "t3.medium",
-      "vcpus": 2.0,
-      "memory_gib": 4.0,
-      "price": 0.0416,
-      "score": 85.5,
-      "reasoning": "Balanced performance across CPU, memory, and GPU"
-    }
-  ]
-}
-```
-
-### Statistics Response
-```json
-{
-  "total_vms": 15420,
-  "providers_count": 18,
-  "gpu_instances_count": 2847,
-  "regions_count": 156,
-  "price_range": {
-    "min": 0.0042,
-    "max": 24.576,
-    "avg": 1.234
-  }
-}
-```
-
-### Health Check Response
-```json
-{
-  "status": "healthy",
-  "providers_loaded": 18
-}
+# Frontend
+REACT_APP_API_URL=http://localhost:8000
 ```
 
 ## Supported Cloud Providers
 
-- **Major Clouds**: AWS, Azure, Google Cloud (GCP), IBM Cloud, Oracle Cloud (OCI)
+- **Major Clouds**: AWS, Azure, Google Cloud (GCP), IBM Cloud, Oracle Cloud
 - **GPU Specialists**: Lambda Labs, RunPod, Vast.ai, Paperspace, FluidStack
-- **Others**: DigitalOcean, Scaleway, OVHcloud, Cudo, Hyperstack, Nebius, SCP
+- **Others**: DigitalOcean, Scaleway, OVHcloud, Cudo, Hyperstack
 
-## Workload Types for Recommendations
+## Data Sources
 
-- **compute**: Optimized for CPU-intensive workloads
-- **memory**: Optimized for memory-intensive workloads  
-- **gpu**: Optimized for GPU workloads
-- **balanced**: Balanced performance across CPU, memory, and GPU
-
-## Architecture
-
-### Technology Stack
-
-- **FastAPI**: Modern, fast web framework for building APIs
-- **DuckDB**: High-performance analytical database for fast queries
-- **Pandas**: Data manipulation and analysis
-- **Pydantic**: Data validation using Python type annotations
-- **Uvicorn**: ASGI server for running the application
-
-### Database Schema
-
-The DuckDB database contains two main tables:
-
-#### VMs Table
-```sql
-CREATE TABLE vms (
-    provider VARCHAR,
-    instance_type VARCHAR,
-    vcpus DOUBLE,
-    memory_gib DOUBLE,
-    accelerator_name VARCHAR,
-    accelerator_count DOUBLE,
-    gpu_info VARCHAR,
-    price DOUBLE,
-    spot_price DOUBLE,
-    region VARCHAR,
-    availability_zone VARCHAR,
-    generation VARCHAR
-)
-```
-
-#### Images Table
-```sql
-CREATE TABLE images (
-    provider VARCHAR,
-    tag VARCHAR,
-    region VARCHAR,
-    os VARCHAR,
-    os_version VARCHAR,
-    image_id VARCHAR,
-    creation_date VARCHAR,
-    base_image_id VARCHAR
-)
-```
-
-### Data Loading Process
-
-1. **Initialization**: On startup, the API checks if the DuckDB database exists and contains data
-2. **GitHub Download**: If no data exists, it downloads the latest catalog from SkyPilot's GitHub repository
-3. **Data Processing**: CSV files are processed and standardized for each cloud provider
-4. **Database Loading**: Data is inserted into DuckDB with proper indexing for performance
-5. **Auto-reload**: The `/reload` endpoint allows updating data without restarting the service
-
-## Error Handling
-
-The API returns standard HTTP status codes:
-
-- `200`: Success
-- `400`: Bad Request (invalid parameters)
-- `404`: Not Found (no VMs match criteria)
-- `500`: Internal Server Error
-
-Error responses include a `detail` field with more information:
-
-```json
-{
-  "detail": "At least one VM must be provided"
-}
-```
-
-## Development
-
-### Project Structure
-```
-├── main.py                     # Application entry point
-├── setup.py                    # Package setup configuration
-├── Makefile                    # Development commands
-├── Dockerfile                  # Docker container configuration
-├── docker-compose.yml          # Docker Compose configuration
-├── requirements.txt            # Python dependencies
-├── vm_catalog.duckdb          # DuckDB database file (auto-generated)
-├── README.md                  # Project documentation
-├── .gitignore                 # Git ignore rules
-├── src/                       # Source code package
-│   ├── __init__.py
-│   ├── api/                   # API layer
-│   │   ├── __init__.py
-│   │   └── main.py           # FastAPI application and endpoints
-│   ├── models/               # Data models
-│   │   ├── __init__.py
-│   │   ├── vm_models.py      # VM-related models
-│   │   └── response_models.py # API response models
-│   ├── services/             # Business logic
-│   │   ├── __init__.py
-│   │   └── duckdb_vm_service.py # VM service using DuckDB
-│   ├── database/             # Database layer
-│   │   ├── __init__.py
-│   │   └── duckdb_loader.py  # DuckDB data loading and management
-│   └── core/                 # Core utilities
-│       ├── __init__.py
-│       └── logging.py        # Logging configuration
-├── tests/                    # Test suite
-│   ├── __init__.py
-│   ├── test_api.py          # API test script
-│   ├── test_duckdb.py       # DuckDB functionality tests
-│   └── test_parameter_fix.py # Parameter testing
-├── docs/                     # Documentation
-│   └── api_spec.yaml        # OpenAPI specification
-└── config/                   # Configuration
-    ├── __init__.py
-    └── settings.py          # Application settings
-```
-
-### Key Components
-
-1. **DuckDBLoader** (`duckdb_loader.py`): Handles data loading from GitHub, CSV processing, and database management
-2. **DuckDBVMService** (`duckdb_vm_service.py`): Provides business logic for VM queries, comparisons, and recommendations
-3. **FastAPI App** (`main.py`): Defines API endpoints and handles HTTP requests/responses
-4. **Pydantic Models** (`models.py`): Data validation and serialization models
-
-### Adding New Features
-
-1. Update models in `models.py` for new data structures
-2. Add database operations in `duckdb_loader.py` if needed
-3. Implement business logic in `duckdb_vm_service.py`
-4. Create endpoints in `main.py`
-5. Update OpenAPI spec in `api_spec.yaml`
-6. Add tests in `test_api.py` or `test_duckdb.py`
-
-### Performance Optimizations
-
-- **DuckDB Indexes**: Automatic indexing on commonly queried fields (provider, price, vcpus, memory, GPU, region)
-- **Efficient Queries**: SQL-based filtering and sorting for optimal performance
-- **Batch Operations**: Bulk data loading using prepared statements
-- **Connection Pooling**: Single persistent DuckDB connection for the application lifecycle
-
-### Running in Production
-
-For production deployment, consider:
-
-1. **ASGI Server**: Use Gunicorn with Uvicorn workers for better performance
-2. **Environment Configuration**: Use environment variables for database paths and settings
-3. **Monitoring**: Add logging, metrics, and health checks
-4. **Security**: Implement authentication, rate limiting, and CORS policies
-5. **Caching**: Cache frequently accessed data and query results
-6. **Database Backup**: Regular backups of the DuckDB database file
-
-```bash
-# Production example
-gunicorn main:app -w 4 -k uvicorn.workers.UvicornWorker --bind 0.0.0.0:8000
-```
-
-### Environment Variables
-
-| Variable | Description | Default |
-|----------|-------------|---------|
-| `DB_PATH` | Path to DuckDB database file | `vm_catalog.duckdb` |
-| `DATA_DIR` | Directory for CSV data files | `v7` |
-| `LOG_LEVEL` | Logging level | `INFO` |
+VM data is sourced from the [SkyPilot project](https://github.com/skypilot-org/skypilot-catalog), providing comprehensive cloud resource information across multiple providers.
 
 ## Testing
 
-### Run All Tests
+### Backend Tests
 ```bash
-# Test API endpoints
-python test_api.py
-
-# Test DuckDB functionality
-python test_duckdb.py
+cd backend
+python -m pytest tests/
 ```
 
-### Manual Testing
+### Frontend Tests
 ```bash
-# Start the server
-python main.py
+cd frontend
+npm test
+```
 
-# Test basic functionality
+### API Testing
+```bash
+# Test API endpoints
 curl http://localhost:8000/health
 curl http://localhost:8000/providers
 curl "http://localhost:8000/vms?limit=5"
 ```
 
-## Data Sources
+## Production Deployment
 
-This project uses VM catalog data from the [SkyPilot project](https://github.com/skypilot-org/skypilot-catalog), which provides comprehensive cloud resource information across multiple providers.
+### Docker Production
+```bash
+# Production build
+docker-compose -f docker-compose.yml up --build
 
-The data is automatically downloaded from:
-`https://github.com/skypilot-org/skypilot-catalog/tree/master/catalogs/v7`
+# With nginx reverse proxy
+docker-compose --profile production up
+```
+
+### Manual Production
+
+#### Backend
+```bash
+cd backend
+pip install gunicorn
+gunicorn main:app -w 4 -k uvicorn.workers.UvicornWorker --bind 0.0.0.0:8000
+```
+
+#### Frontend
+```bash
+cd frontend
+npm run build
+# Serve the build directory with nginx or another web server
+```
+
+## Contributing
+
+1. Fork the repository
+2. Create a feature branch (`git checkout -b feature/amazing-feature`)
+3. Make your changes
+4. Add tests for new functionality
+5. Ensure all tests pass
+6. Commit your changes (`git commit -m 'Add amazing feature'`)
+7. Push to the branch (`git push origin feature/amazing-feature`)
+8. Open a Pull Request
 
 ## License
 
 This project uses SkyPilot's cloud resource catalog data. Please refer to SkyPilot's license for data usage terms.
 
-## Contributing
+## Support
 
-1. Fork the repository
-2. Create a feature branch
-3. Make your changes
-4. Add tests for new functionality
-5. Ensure all tests pass
-6. Submit a pull request
+- **Issues**: Report bugs and request features via GitHub Issues
+- **Documentation**: See individual README files in frontend/ and backend/ directories
+- **API Docs**: Interactive documentation at http://localhost:8000/docs
 
 ## Changelog
 
-### v1.0.0 (Current)
-- **DuckDB Integration**: Migrated from CSV files to DuckDB for better performance
-- **GitHub Data Loading**: Automatic data loading from SkyPilot repository
-- **Enhanced API**: Added preview, reload, and health check endpoints
-- **Improved Architecture**: Separated concerns with dedicated loader and service classes
-- **Better Error Handling**: Comprehensive error responses and logging
-- **Performance Optimizations**: Database indexing and efficient SQL queries
+### v2.0.0 (Current)
+- **Reorganized Structure**: Separated frontend and backend into distinct directories
+- **React Frontend**: Complete React application with modern UI
+- **Docker Support**: Full containerization with docker-compose
+- **Development Tools**: Improved development workflow with start-dev.sh
+- **Enhanced Documentation**: Comprehensive documentation for both frontend and backend
+
+### v1.0.0
+- **Initial Release**: FastAPI backend with DuckDB integration
+- **Multi-cloud Support**: Support for 15+ cloud providers
+- **VM Comparison**: Basic VM comparison and recommendation features
