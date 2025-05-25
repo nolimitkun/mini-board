@@ -146,24 +146,12 @@ const VMFilters = ({ filters, onFiltersChange, onReset }) => {
               GPU Requirements
             </label>
             <div className="space-y-2">
-              <label className="flex items-center">
-                <input
-                  type="checkbox"
-                  checked={filters.has_gpu || false}
-                  onChange={(e) => handleInputChange('has_gpu', e.target.checked)}
-                  className="rounded border-gray-300 text-primary-600 focus:ring-primary-500"
-                />
-                <span className="ml-2 text-sm text-gray-700">
-                  Has GPU
-                </span>
-              </label>
               <input
                 type="text"
-                placeholder="GPU name (e.g., V100, A100)"
+                placeholder="GPU name (e.g., H100, A100)"
                 value={filters.gpu_name || ''}
                 onChange={(e) => handleInputChange('gpu_name', e.target.value)}
                 className="input"
-                disabled={!filters.has_gpu}
               />
             </div>
           </div>

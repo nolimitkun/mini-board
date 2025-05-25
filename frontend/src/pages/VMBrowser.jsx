@@ -3,17 +3,16 @@ import { useQuery } from 'react-query';
 import { vmApi } from '../services/api';
 import Layout from '../components/Layout/Layout';
 import VMFilters from '../components/VMs/VMFilters';
-import VMCard from '../components/VMs/VMCard';
 import LoadingSpinner from '../components/Common/LoadingSpinner';
 import ErrorMessage from '../components/Common/ErrorMessage';
-import { Search, Grid, List, ChevronUp, ChevronDown } from 'lucide-react';
+import { Search, ChevronUp, ChevronDown } from 'lucide-react';
 
 const VMBrowser = () => {
   const [filters, setFilters] = useState({
     providers: [],
-    limit: 100
+    limit: 100,
+    gpu_name: 'H100'
   });
-  const [viewMode, setViewMode] = useState('grid'); // 'grid' or 'list'
   const [selectedVMs, setSelectedVMs] = useState([]);
   const [sortConfig, setSortConfig] = useState({ key: 'price', direction: 'asc' });
 
@@ -38,7 +37,8 @@ const VMBrowser = () => {
   const handleFiltersReset = () => {
     setFilters({
       providers: [],
-      limit: 100
+      limit: 100,
+      gpu_name: 'H100'
     });
   };
 
@@ -123,36 +123,11 @@ const VMBrowser = () => {
     <Layout>
       <div className="space-y-6">
         {/* Header */}
-        <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-3xl font-bold text-gray-900">Browse Virtual Machines</h1>
-            <p className="text-gray-600 mt-1">
-              Compare VMs across {totalCount.toLocaleString()} instances from multiple cloud providers
-            </p>
-          </div>
-          
-          <div className="flex items-center space-x-2">
-            <button
-              onClick={() => setViewMode('grid')}
-              className={`p-2 rounded-md ${
-                viewMode === 'grid' 
-                  ? 'bg-primary-100 text-primary-600' 
-                  : 'text-gray-400 hover:text-gray-600'
-              }`}
-            >
-              <Grid className="w-5 h-5" />
-            </button>
-            <button
-              onClick={() => setViewMode('list')}
-              className={`p-2 rounded-md ${
-                viewMode === 'list' 
-                  ? 'bg-primary-100 text-primary-600' 
-                  : 'text-gray-400 hover:text-gray-600'
-              }`}
-            >
-              <List className="w-5 h-5" />
-            </button>
-          </div>
+        <div>
+          <h1 className="text-3xl font-bold text-gray-900">Browse Virtual Machines</h1>
+          <p className="text-gray-600 mt-1">
+            Compare VMs across {totalCount.toLocaleString()} instances from multiple cloud providers
+          </p>
         </div>
 
         {/* Filters */}
@@ -239,18 +214,6 @@ const VMBrowser = () => {
               >
                 Reset Filters
               </button>
-            </div>
-          ) : viewMode === 'grid' ? (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {vms.map((vm, index) => (
-                <VMCard
-                  key={`${vm.provider}-${vm.instance_type}-${vm.region}-${index}`}
-                  vm={vm}
-                  onSelect={handleVMSelect}
-                  isSelected={isVMSelected(vm)}
-                  showCompareButton={true}
-                />
-              ))}
             </div>
           ) : (
             <div className="space-y-2">
