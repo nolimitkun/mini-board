@@ -124,7 +124,7 @@ const VMBrowser = () => {
       <div className="space-y-6">
         {/* Header */}
         <div>
-          <h1 className="text-3xl font-bold text-gray-900">Browse Virtual Machines</h1>
+          <h1 className="text-3xl font-bold text-gray-900">Virtual Machines</h1>
           <p className="text-gray-600 mt-1">
             Compare VMs across {totalCount.toLocaleString()} instances from multiple cloud providers
           </p>

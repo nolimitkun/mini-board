@@ -15,7 +15,7 @@ setup(
     description="A high-performance REST API for comparing virtual machines across multiple cloud providers",
     long_description=long_description,
     long_description_content_type="text/markdown",
-    url="https://github.com/your-org/cloud-vm-comparison-api",
+    url="https://github.com/your-org/mini-board",
     packages=find_packages(),
     classifiers=[
         "Development Status :: 5 - Production/Stable",

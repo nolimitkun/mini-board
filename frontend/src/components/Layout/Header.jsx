@@ -6,7 +6,7 @@ const Header = () => {
   const location = useLocation();
 
   const navigation = [
-    { name: 'Browse VMs', href: '/', icon: Cloud },
+    { name: 'VMs', href: '/', icon: Cloud },
     { name: 'Compare', href: '/compare', icon: GitCompare },
     { name: 'Recommendations', href: '/recommendations', icon: Lightbulb },
     { name: 'Statistics', href: '/stats', icon: BarChart3 },
@@ -31,7 +31,7 @@ const Header = () => {
                 <Cloud className="w-5 h-5 text-white" />
               </div>
               <div>
-                <h1 className="text-xl font-bold text-gray-900">CloudVM</h1>
+                <h1 className="text-xl font-bold text-gray-900">Mini Board</h1>
                 <p className="text-xs text-gray-500">Comparison Tool</p>
               </div>
             </Link>
