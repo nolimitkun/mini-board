@@ -194,12 +194,8 @@ const VMBrowser = () => {
                 Reset Filters
               </button>
             </div>
-          ) : (
-            <div className={
-              viewMode === 'grid' 
-                ? 'grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6'
-                : 'space-y-4'
-            }>
+          ) : viewMode === 'grid' ? (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {vms.map((vm, index) => (
                 <VMCard
                   key={`${vm.provider}-${vm.instance_type}-${vm.region}-${index}`}
@@ -209,6 +205,140 @@ const VMBrowser = () => {
                   showCompareButton={true}
                 />
               ))}
+            </div>
+          ) : (
+            <div className="space-y-2">
+              {/* List Header */}
+              <div className="bg-gray-50 border border-gray-200 rounded-lg p-3 text-sm font-medium text-gray-700">
+                <div className="grid grid-cols-12 gap-4 items-center">
+                  <div className="col-span-1">Select</div>
+                  <div className="col-span-2">Provider</div>
+                  <div className="col-span-2">Instance Type</div>
+                  <div className="col-span-1">vCPUs</div>
+                  <div className="col-span-1">Memory</div>
+                  <div className="col-span-2">Region</div>
+                  <div className="col-span-1">Price/hr</div>
+                  <div className="col-span-1">Spot Price</div>
+                  <div className="col-span-1">GPU</div>
+                </div>
+              </div>
+              
+              {/* List Items */}
+              {vms.map((vm, index) => {
+                const formatPrice = (price) => {
+                  if (price === null || price === undefined) return 'N/A';
+                  return `$${price.toFixed(4)}`;
+                };
+                
+                const getProviderColor = (provider) => {
+                  const colors = {
+                    aws: 'bg-orange-100 text-orange-800',
+                    azure: 'bg-blue-100 text-blue-800',
+                    gcp: 'bg-green-100 text-green-800',
+                    ibm: 'bg-purple-100 text-purple-800',
+                    oci: 'bg-red-100 text-red-800',
+                    default: 'bg-gray-100 text-gray-800',
+                  };
+                  return colors[provider.toLowerCase()] || colors.default;
+                };
+                
+                return (
+                  <div
+                    key={`${vm.provider}-${vm.instance_type}-${vm.region}-${index}`}
+                    className={`border border-gray-200 rounded-lg p-3 hover:bg-gray-50 transition-colors ${
+                      isVMSelected(vm) ? 'ring-2 ring-primary-500 bg-primary-50' : 'bg-white'
+                    }`}
+                  >
+                    <div className="grid grid-cols-12 gap-4 items-center text-sm">
+                      {/* Select Button */}
+                      <div className="col-span-1">
+                        <button
+                          onClick={() => handleVMSelect(vm)}
+                          className={`btn text-xs ${
+                            isVMSelected(vm) ? 'btn-primary' : 'btn-secondary'
+                          }`}
+                        >
+                          {isVMSelected(vm) ? '✓' : '+'}
+                        </button>
+                      </div>
+                      
+                      {/* Provider */}
+                      <div className="col-span-2">
+                        <span className={`badge ${getProviderColor(vm.provider)}`}>
+                          {vm.provider.toUpperCase()}
+                        </span>
+                        {vm.generation && (
+                          <span className="badge-gray ml-1 text-xs">
+                            {vm.generation}
+                          </span>
+                        )}
+                      </div>
+                      
+                      {/* Instance Type */}
+                      <div className="col-span-2 font-medium text-gray-900">
+                        {vm.instance_type}
+                      </div>
+                      
+                      {/* vCPUs */}
+                      <div className="col-span-1 text-gray-700">
+                        {vm.vcpus}
+                      </div>
+                      
+                      {/* Memory */}
+                      <div className="col-span-1 text-gray-700">
+                        {vm.memory_gib} GiB
+                      </div>
+                      
+                      {/* Region */}
+                      <div className="col-span-2 text-gray-700">
+                        <div>{vm.region}</div>
+                        {vm.availability_zone && (
+                          <div className="text-xs text-gray-500">{vm.availability_zone}</div>
+                        )}
+                      </div>
+                      
+                      {/* Price */}
+                      <div className="col-span-1 font-medium text-gray-900">
+                        {formatPrice(vm.price)}
+                      </div>
+                      
+                      {/* Spot Price */}
+                      <div className="col-span-1">
+                        {vm.spot_price ? (
+                          <div>
+                            <div className="font-medium text-yellow-600">
+                              {formatPrice(vm.spot_price)}
+                            </div>
+                            {vm.price && (
+                              <div className="text-xs text-green-600">
+                                -{Math.round((1 - vm.spot_price / vm.price) * 100)}%
+                              </div>
+                            )}
+                          </div>
+                        ) : (
+                          <span className="text-gray-400">N/A</span>
+                        )}
+                      </div>
+                      
+                      {/* GPU */}
+                      <div className="col-span-1">
+                        {vm.accelerator_name ? (
+                          <div className="text-green-700">
+                            <div className="font-medium text-xs">
+                              {vm.accelerator_count}x
+                            </div>
+                            <div className="text-xs">
+                              {vm.accelerator_name}
+                            </div>
+                          </div>
+                        ) : (
+                          <span className="text-gray-400">-</span>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
             </div>
           )}
         </div>
