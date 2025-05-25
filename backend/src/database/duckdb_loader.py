@@ -602,25 +602,46 @@ class DuckDBLoader:
         preview_data = {}
         
         try:
+            # Initialize database connection if not already done
             if not self.conn:
-                raise Exception("Database connection not initialized")
+                logger.info("Database connection not initialized, initializing now...")
+                self.initialize_database()
+            
+            # Check if database has any data, if not try to load it
+            total_vms = self.conn.execute("SELECT COUNT(*) FROM vms").fetchone()[0]
+            if total_vms == 0:
+                logger.info("No VMs found in database, attempting to load data...")
+                try:
+                    self.load_all_data()
+                    total_vms = self.conn.execute("SELECT COUNT(*) FROM vms").fetchone()[0]
+                except Exception as load_error:
+                    logger.error(f"Failed to load data: {load_error}")
+                    return {
+                        "error": f"Database is empty and failed to load data: {str(load_error)}",
+                        "total_vms": 0,
+                        "providers_count": 0
+                    }
             
             # Get available providers from database
             providers_result = self.conn.execute("SELECT DISTINCT provider FROM vms ORDER BY provider").fetchall()
             providers = [row[0] for row in providers_result]
             
+            if not providers:
+                return {
+                    "error": "No providers found in database",
+                    "total_vms": total_vms,
+                    "providers_count": 0
+                }
+            
             for provider in providers:
-                provider_data = {}
-                
-                # Preview VMs data
                 try:
                     # Get sample VMs data
                     vms_sql = f"SELECT * FROM vms WHERE provider = ? LIMIT {max_rows}"
                     vms_df = self.conn.execute(vms_sql, [provider]).df()
                     
                     if not vms_df.empty:
-                        # Convert to JSON-serializable format
-                        sample_rows = []
+                        # Convert to JSON-serializable format that matches frontend expectations
+                        sample_data = []
                         for _, row in vms_df.iterrows():
                             row_dict = {}
                             for col, val in row.items():
@@ -628,73 +649,34 @@ class DuckDBLoader:
                                     row_dict[col] = None
                                 else:
                                     row_dict[col] = val
-                            sample_rows.append(row_dict)
+                            sample_data.append(row_dict)
                         
                         # Get total count for this provider
                         total_count = self.conn.execute("SELECT COUNT(*) FROM vms WHERE provider = ?", [provider]).fetchone()[0]
                         
-                        provider_data['vms'] = {
-                            'headers': vms_df.columns.tolist(),
-                            'sample_rows': sample_rows,
-                            'total_columns': len(vms_df.columns),
-                            'preview_rows': len(sample_rows),
-                            'total_rows': total_count
+                        # Structure data to match frontend expectations
+                        preview_data[provider] = {
+                            'sample_data': sample_data,
+                            'total_count': total_count
                         }
                         
                 except Exception as e:
                     logger.error(f"Error previewing VMs for {provider}: {e}")
-                    provider_data['vms'] = {'error': str(e)}
-                
-                # Preview Images data
-                try:
-                    # Get sample Images data
-                    images_sql = f"SELECT * FROM images WHERE provider = ? LIMIT {max_rows}"
-                    images_df = self.conn.execute(images_sql, [provider]).df()
-                    
-                    if not images_df.empty:
-                        # Convert to JSON-serializable format
-                        sample_rows = []
-                        for _, row in images_df.iterrows():
-                            row_dict = {}
-                            for col, val in row.items():
-                                if pd.isna(val):
-                                    row_dict[col] = None
-                                else:
-                                    row_dict[col] = val
-                            sample_rows.append(row_dict)
-                        
-                        # Get total count for this provider
-                        total_count = self.conn.execute("SELECT COUNT(*) FROM images WHERE provider = ?", [provider]).fetchone()[0]
-                        
-                        provider_data['images'] = {
-                            'headers': images_df.columns.tolist(),
-                            'sample_rows': sample_rows,
-                            'total_columns': len(images_df.columns),
-                            'preview_rows': len(sample_rows),
-                            'total_rows': total_count
-                        }
-                    else:
-                        # No images for this provider
-                        provider_data['images'] = {
-                            'headers': [],
-                            'sample_rows': [],
-                            'total_columns': 0,
-                            'preview_rows': 0,
-                            'total_rows': 0
-                        }
-                        
-                except Exception as e:
-                    logger.error(f"Error previewing images for {provider}: {e}")
-                    provider_data['images'] = {'error': str(e)}
-                
-                if provider_data:
-                    preview_data[provider] = provider_data
+                    preview_data[provider] = {
+                        'sample_data': [],
+                        'total_count': 0,
+                        'error': str(e)
+                    }
             
             return preview_data
             
         except Exception as e:
             logger.error(f"Error previewing database data: {e}")
-            return {}
+            return {
+                "error": f"Failed to preview database data: {str(e)}",
+                "total_vms": 0,
+                "providers_count": 0
+            }
 
     def close(self):
         """Close DuckDB connection"""

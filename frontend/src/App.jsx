@@ -28,8 +28,6 @@ function App() {
         <div className="App">
           <Routes>
             <Route path="/" element={<VMBrowser />} />
-            <Route path="/compare" element={<VMCompare />} />
-            <Route path="/recommendations" element={<VMRecommendations />} />
             <Route path="/stats" element={<Statistics />} />
             <Route path="/admin" element={<Admin />} />
           </Routes>
