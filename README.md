@@ -32,19 +32,17 @@ mini-board/
 
 ### Frontend (React)
 - **Modern UI**: Built with React and Tailwind CSS
-- **VM Browser**: Browse and filter VMs across providers
-- **Comparison Tool**: Side-by-side VM comparison
-- **Recommendations**: Smart VM recommendations based on requirements
+- **VM Browser**: Browse, filter, and sort VMs across all providers (select-all providers by default)
 - **Statistics Dashboard**: Analytics and insights
-- **Admin Panel**: Data management interface
+- **Admin Panel**: Data management interface (preview, reload catalog)
 - **Responsive Design**: Works on desktop and mobile
 
 ### Backend (FastAPI)
-- **Multi-cloud Support**: 15+ cloud providers (AWS, Azure, GCP, etc.)
+- **Multi-cloud Support**: 25 cloud providers (AWS, Azure, GCP, and more)
 - **High-Performance Database**: DuckDB for fast analytical queries
-- **Auto-updating Data**: Latest VM data from SkyPilot's catalog
+- **Auto-updating Data**: Latest VM data from SkyPilot's catalog (v8)
 - **Advanced Filtering**: Filter by CPU, memory, GPU, region, price
-- **Smart Recommendations**: ML-based VM recommendations
+- **Graceful Missing Data**: Catalog gaps (e.g. unpriced or region-less GCP rows) surface as null and can be hidden via `hide_incomplete`
 - **RESTful API**: Comprehensive REST API with OpenAPI docs
 - **Data Management**: Preview, reload, and health check endpoints
 
@@ -116,11 +114,14 @@ The backend provides a comprehensive REST API:
 | Endpoint | Method | Description |
 |----------|--------|-------------|
 | `/providers` | GET | List available cloud providers |
-| `/vms` | GET | Get VMs with filtering and sorting |
-| `/vms/compare` | POST | Compare specific VMs |
-| `/vms/recommendations` | POST | Get VM recommendations |
+| `/vms` | GET | Get VMs with filtering and sorting (supports `hide_incomplete`) |
+| `/regions` | GET | List available regions (optionally by provider) |
 | `/stats` | GET | Get catalog statistics |
+| `/preview` | GET | Preview sample rows per provider |
+| `/reload` | POST | Re-download the catalog from SkyPilot's GitHub |
 | `/health` | GET | Health check |
+
+> Note: `/vms/compare` and `/vms/recommendations` endpoints still exist for API consumers, but the corresponding UI pages have been removed.
 
 ## Development
 
@@ -156,7 +157,8 @@ Create a `.env` file in the root directory:
 ```env
 # Backend
 LOG_LEVEL=INFO
-DB_PATH=./data/vm_catalog.duckdb
+DB_PATH=vm_catalog.duckdb
+DATA_DIR=v8
 
 # Frontend
 REACT_APP_API_URL=http://localhost:8000
@@ -164,13 +166,17 @@ REACT_APP_API_URL=http://localhost:8000
 
 ## Supported Cloud Providers
 
-- **Major Clouds**: AWS, Azure, Google Cloud (GCP), IBM Cloud, Oracle Cloud
-- **GPU Specialists**: Lambda Labs, RunPod, Vast.ai, Paperspace, FluidStack
-- **Others**: DigitalOcean, Scaleway, OVHcloud, Cudo, Hyperstack
+25 providers sourced from SkyPilot's v8 catalog:
+
+- **Major Clouds**: AWS, Azure, Google Cloud (GCP), IBM Cloud, Oracle Cloud (OCI), SCP
+- **GPU Specialists**: Lambda, RunPod, Vast, Paperspace, FluidStack, Hyperbolic, Mithril, Prime Intellect, Shadeform, Verda, Yotta, Nebius, Hyperstack
+- **Others**: DigitalOcean, Scaleway, OVHcloud, Cudo, Seeweb, Kubernetes
+
+> The exact provider set tracks SkyPilot's catalog and may change as it is updated. Call `GET /providers` for the live list.
 
 ## Data Sources
 
-VM data is sourced from the [SkyPilot project](https://github.com/skypilot-org/skypilot-catalog), providing comprehensive cloud resource information across multiple providers.
+VM data is sourced from the [SkyPilot project](https://github.com/skypilot-org/skypilot-catalog) (catalog `v8`), providing comprehensive cloud resource information across multiple providers. The catalog version is configured via `DATA_DIR` and the GitHub base URL in `backend/src/database/duckdb_loader.py`.
 
 ## Testing
 
@@ -244,7 +250,13 @@ This project uses SkyPilot's cloud resource catalog data. Please refer to SkyPil
 
 ## Changelog
 
-### v2.0.0 (Current)
+### v2.1.0 (Current)
+- **SkyPilot v8 Catalog**: Upgraded data source from v7 to v8 (25 providers, including Hyperbolic, Mithril, Prime Intellect, Seeweb, Shadeform, Verda, Yotta)
+- **Graceful Missing Data**: Optional VM fields surface as null instead of `nan`/`0`; `hide_incomplete` filter (default on) hides unpriced rows and de-prioritizes them in price sorting
+- **VM Browser**: All providers selected by default with a "Select All" checkbox
+- **Streamlined UI**: Removed the Compare and Recommendations pages
+
+### v2.0.0
 - **Reorganized Structure**: Separated frontend and backend into distinct directories
 - **React Frontend**: Complete React application with modern UI
 - **Docker Support**: Full containerization with docker-compose
