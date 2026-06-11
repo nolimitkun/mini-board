@@ -11,7 +11,9 @@ const VMFilters = ({ filters, onFiltersChange, onReset }) => {
     // Load providers
     vmApi.getProviders()
       .then(response => {
-        const list = response.data.providers;
+        const list = [...response.data.providers].sort((a, b) =>
+          a.localeCompare(b, undefined, { sensitivity: 'base' })
+        );
         setProviders(list);
         // Select all providers by default (once), unless the user already has a selection
         if (!didDefaultProviders.current && (filters.providers || []).length === 0) {
@@ -47,7 +49,7 @@ const VMFilters = ({ filters, onFiltersChange, onReset }) => {
     const newProviders = currentProviders.includes(provider)
       ? currentProviders.filter(p => p !== provider)
       : [...currentProviders, provider];
-    
+
     handleInputChange('providers', newProviders);
   };
 
@@ -55,206 +57,178 @@ const VMFilters = ({ filters, onFiltersChange, onReset }) => {
     onReset();
   };
 
-  const hasActiveFilters = Object.values(filters).some(value => 
-    value !== null && value !== undefined && value !== '' && 
+  const hasActiveFilters = Object.values(filters).some(value =>
+    value !== null && value !== undefined && value !== '' &&
     (Array.isArray(value) ? value.length > 0 : true)
   );
 
+  const labelClass = "block text-xs font-medium text-gray-600 uppercase tracking-wide mb-1";
+  const checkboxClass = "rounded border-gray-300 text-primary-600 focus:ring-primary-500 w-4 h-4";
+
   return (
-    <div className="card mb-4">
-      <div className="card-body py-3">
-        {/* All Filters */}
-        <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 xl:grid-cols-8 gap-3 mb-3">
-          {/* Providers */}
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Cloud Providers
-            </label>
-            <div className="space-y-1 max-h-24 overflow-y-auto">
-              <label className="flex items-center text-xs font-medium border-b border-gray-100 pb-1 mb-1">
-                <input
-                  type="checkbox"
-                  checked={allProvidersSelected}
-                  ref={el => { if (el) el.indeterminate = someProvidersSelected; }}
-                  onChange={handleSelectAllProviders}
-                  className="rounded border-gray-300 text-primary-600 focus:ring-primary-500 w-3 h-3"
-                />
-                <span className="ml-1 text-gray-900">
-                  Select All
-                </span>
-              </label>
-              {providers.map(provider => (
-                <label key={provider} className="flex items-center text-xs">
-                  <input
-                    type="checkbox"
-                    checked={selectedProviders.includes(provider)}
-                    onChange={() => handleProviderToggle(provider)}
-                    className="rounded border-gray-300 text-primary-600 focus:ring-primary-500 w-3 h-3"
-                  />
-                  <span className="ml-1 text-gray-700 capitalize">
-                    {provider}
-                  </span>
-                </label>
-              ))}
-            </div>
-          </div>
+    <div className="card">
+      {/* Panel header */}
+      <div className="flex items-center justify-between px-4 py-3 border-b border-gray-200">
+        <h2 className="text-sm font-medium text-gray-800">Filters</h2>
+        {hasActiveFilters && (
+          <button
+            onClick={clearFilters}
+            className="flex items-center space-x-1 text-xs font-medium text-primary-600 hover:text-primary-700"
+          >
+            <X className="w-3.5 h-3.5" />
+            <span>Clear all</span>
+          </button>
+        )}
+      </div>
 
-          {/* vCPUs */}
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              vCPUs
-            </label>
-            <div className="grid grid-cols-2 gap-2">
-              <input
-                type="number"
-                placeholder="Min"
-                value={filters.min_vcpus || ''}
-                onChange={(e) => handleInputChange('min_vcpus', e.target.value)}
-                className="input"
-                min="0"
-                step="0.5"
-              />
-              <input
-                type="number"
-                placeholder="Max"
-                value={filters.max_vcpus || ''}
-                onChange={(e) => handleInputChange('max_vcpus', e.target.value)}
-                className="input"
-                min="0"
-                step="0.5"
-              />
-            </div>
-          </div>
-
-          {/* Memory */}
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Memory (GiB)
-            </label>
-            <div className="grid grid-cols-2 gap-2">
-              <input
-                type="number"
-                placeholder="Min"
-                value={filters.min_memory || ''}
-                onChange={(e) => handleInputChange('min_memory', e.target.value)}
-                className="input"
-                min="0"
-                step="0.5"
-              />
-              <input
-                type="number"
-                placeholder="Max"
-                value={filters.max_memory || ''}
-                onChange={(e) => handleInputChange('max_memory', e.target.value)}
-                className="input"
-                min="0"
-                step="0.5"
-              />
-            </div>
-          </div>
-
-          {/* Price */}
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Max Price ($/hour)
-            </label>
-            <input
-              type="number"
-              placeholder="e.g., 2.50"
-              value={filters.max_price || ''}
-              onChange={(e) => handleInputChange('max_price', e.target.value)}
-              className="input"
-              min="0"
-              step="0.01"
-            />
-          </div>
-
-          {/* GPU Filter */}
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              GPU Requirements
-            </label>
-            <div className="space-y-2">
-              <input
-                type="text"
-                placeholder="GPU name (e.g., H100, A100)"
-                value={filters.gpu_name || ''}
-                onChange={(e) => handleInputChange('gpu_name', e.target.value)}
-                className="input"
-              />
-            </div>
-          </div>
-
-          {/* Region */}
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Region
-            </label>
-            <select
-              value={filters.region || ''}
-              onChange={(e) => handleInputChange('region', e.target.value)}
-              className="input"
-            >
-              <option value="">All Regions</option>
-              {regions.map(region => (
-                <option key={region} value={region}>
-                  {region}
-                </option>
-              ))}
-            </select>
-          </div>
-
-
-          {/* Data Quality */}
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Data Quality
-            </label>
-            <label className="flex items-center text-xs mt-2">
+      <div className="px-4 py-3 space-y-3">
+        {/* Providers */}
+        <div>
+          <label className={labelClass}>Cloud providers</label>
+          <div className="space-y-1 max-h-28 overflow-y-auto pr-1">
+            <label className="flex items-center text-sm font-medium border-b border-gray-100 pb-1.5 mb-1">
               <input
                 type="checkbox"
-                checked={filters.hide_incomplete !== false}
-                onChange={(e) => handleInputChange('hide_incomplete', e.target.checked)}
-                className="rounded border-gray-300 text-primary-600 focus:ring-primary-500 w-3 h-3"
+                checked={allProvidersSelected}
+                ref={el => { if (el) el.indeterminate = someProvidersSelected; }}
+                onChange={handleSelectAllProviders}
+                className={checkboxClass}
               />
-              <span className="ml-1 text-gray-700">
-                Hide unpriced entries
-              </span>
+              <span className="ml-2 text-gray-900">Select all</span>
             </label>
-          </div>
-
-          {/* Results Limit */}
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Results Limit
-            </label>
-            <select
-              value={filters.limit || 100}
-              onChange={(e) => handleInputChange('limit', parseInt(e.target.value))}
-              className="input"
-            >
-              <option value={50}>50 results</option>
-              <option value={100}>100 results</option>
-              <option value={200}>200 results</option>
-              <option value={500}>500 results</option>
-              <option value={1000}>1000 results</option>
-            </select>
-          </div>
-          {/* Clear Filters Button */}
-          <div className="flex justify-end">
-            {hasActiveFilters && (
-              <button
-                onClick={clearFilters}
-                className="btn-secondary flex items-center space-x-2 text-red-600 hover:text-red-700"
-              >
-                <X className="w-4 h-4" />
-                <span>Clear All</span>
-              </button>
-            )}
+            {providers.map(provider => (
+              <label key={provider} className="flex items-center text-sm cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={selectedProviders.includes(provider)}
+                  onChange={() => handleProviderToggle(provider)}
+                  className={checkboxClass}
+                />
+                <span className="ml-2 text-gray-700 capitalize">{provider}</span>
+              </label>
+            ))}
           </div>
         </div>
 
+        {/* vCPUs */}
+        <div>
+          <label className={labelClass}>vCPUs</label>
+          <div className="grid grid-cols-2 gap-2">
+            <input
+              type="number"
+              placeholder="Min"
+              value={filters.min_vcpus || ''}
+              onChange={(e) => handleInputChange('min_vcpus', e.target.value)}
+              className="input"
+              min="0"
+              step="0.5"
+            />
+            <input
+              type="number"
+              placeholder="Max"
+              value={filters.max_vcpus || ''}
+              onChange={(e) => handleInputChange('max_vcpus', e.target.value)}
+              className="input"
+              min="0"
+              step="0.5"
+            />
+          </div>
+        </div>
 
+        {/* Memory */}
+        <div>
+          <label className={labelClass}>Memory (GiB)</label>
+          <div className="grid grid-cols-2 gap-2">
+            <input
+              type="number"
+              placeholder="Min"
+              value={filters.min_memory || ''}
+              onChange={(e) => handleInputChange('min_memory', e.target.value)}
+              className="input"
+              min="0"
+              step="0.5"
+            />
+            <input
+              type="number"
+              placeholder="Max"
+              value={filters.max_memory || ''}
+              onChange={(e) => handleInputChange('max_memory', e.target.value)}
+              className="input"
+              min="0"
+              step="0.5"
+            />
+          </div>
+        </div>
+
+        {/* Max Price */}
+        <div>
+          <label className={labelClass}>Max price ($/hour)</label>
+          <input
+            type="number"
+            placeholder="e.g., 2.50"
+            value={filters.max_price || ''}
+            onChange={(e) => handleInputChange('max_price', e.target.value)}
+            className="input"
+            min="0"
+            step="0.01"
+          />
+        </div>
+
+        {/* GPU */}
+        <div>
+          <label className={labelClass}>GPU name</label>
+          <input
+            type="text"
+            placeholder="e.g., H100, A100"
+            value={filters.gpu_name || ''}
+            onChange={(e) => handleInputChange('gpu_name', e.target.value)}
+            className="input"
+          />
+        </div>
+
+        {/* Region */}
+        <div>
+          <label className={labelClass}>Region</label>
+          <select
+            value={filters.region || ''}
+            onChange={(e) => handleInputChange('region', e.target.value)}
+            className="input"
+          >
+            <option value="">All regions</option>
+            {regions.map(region => (
+              <option key={region} value={region}>{region}</option>
+            ))}
+          </select>
+        </div>
+
+        {/* Results Limit */}
+        <div>
+          <label className={labelClass}>Results limit</label>
+          <select
+            value={filters.limit || 100}
+            onChange={(e) => handleInputChange('limit', parseInt(e.target.value))}
+            className="input"
+          >
+            <option value={50}>50 results</option>
+            <option value={100}>100 results</option>
+            <option value={200}>200 results</option>
+            <option value={500}>500 results</option>
+            <option value={1000}>1000 results</option>
+          </select>
+        </div>
+
+        {/* Data Quality */}
+        <div className="pt-2 border-t border-gray-100">
+          <label className="flex items-center text-sm cursor-pointer">
+            <input
+              type="checkbox"
+              checked={filters.hide_incomplete !== false}
+              onChange={(e) => handleInputChange('hide_incomplete', e.target.checked)}
+              className={checkboxClass}
+            />
+            <span className="ml-2 text-gray-700">Hide unpriced entries</span>
+          </label>
+        </div>
       </div>
     </div>
   );

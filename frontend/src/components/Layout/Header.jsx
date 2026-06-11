@@ -19,34 +19,39 @@ const Header = () => {
   };
 
   return (
-    <header className="bg-white shadow-sm border-b border-gray-200">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <header className="bg-white border-b border-gray-200 sticky top-0 z-20">
+      <div className="w-full px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center h-16">
           {/* Logo */}
           <div className="flex items-center">
-            <Link to="/" className="flex items-center space-x-2">
+            <Link to="/" className="flex items-center space-x-3">
               <div className="w-8 h-8 bg-primary-600 rounded-lg flex items-center justify-center">
                 <Cloud className="w-5 h-5 text-white" />
               </div>
-              <div>
-                <h1 className="text-xl font-bold text-gray-900">Mini Board</h1>
-                <p className="text-xs text-gray-500">Comparison Tool</p>
+              <div className="leading-tight">
+                <h1 className="text-[1.375rem] font-display font-normal text-gray-700">
+                  Mini Board
+                </h1>
               </div>
+              <span className="hidden sm:inline-block text-sm text-gray-500 border-l border-gray-300 pl-3 ml-1">
+                Cloud VM Catalog
+              </span>
             </Link>
           </div>
 
-          {/* Navigation */}
-          <nav className="hidden md:flex space-x-8">
+          {/* Navigation — Google Cloud tab style */}
+          <nav className="hidden md:flex h-full items-stretch space-x-1">
             {navigation.map((item) => {
               const Icon = item.icon;
+              const active = isActive(item.href);
               return (
                 <Link
                   key={item.name}
                   to={item.href}
-                  className={`flex items-center space-x-2 px-3 py-2 rounded-md text-sm font-medium transition-colors duration-200 ${
-                    isActive(item.href)
-                      ? 'text-primary-600 bg-primary-50'
-                      : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
+                  className={`relative flex items-center space-x-2 px-4 text-sm font-medium transition-colors duration-150 border-b-[3px] ${
+                    active
+                      ? 'text-primary-700 border-primary-600'
+                      : 'text-gray-600 border-transparent hover:text-gray-900 hover:bg-gray-50'
                   }`}
                 >
                   <Icon className="w-4 h-4" />
@@ -79,9 +84,9 @@ const Header = () => {
               <Link
                 key={item.name}
                 to={item.href}
-                className={`flex items-center space-x-2 px-3 py-2 rounded-md text-base font-medium transition-colors duration-200 ${
+                className={`flex items-center space-x-2 px-3 py-2 rounded text-base font-medium transition-colors duration-150 ${
                   isActive(item.href)
-                    ? 'text-primary-600 bg-primary-50'
+                    ? 'text-primary-700 bg-primary-50'
                     : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
                 }`}
               >

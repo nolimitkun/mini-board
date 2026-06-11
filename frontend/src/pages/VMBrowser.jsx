@@ -63,14 +63,18 @@ const VMBrowser = () => {
         let aValue = a[sortConfig.key];
         let bValue = b[sortConfig.key];
 
-        // Handle null/undefined values
-        if (aValue === null || aValue === undefined) aValue = 0;
-        if (bValue === null || bValue === undefined) bValue = 0;
+        const aNil = aValue === null || aValue === undefined;
+        const bNil = bValue === null || bValue === undefined;
 
-        // Handle string comparisons
-        if (typeof aValue === 'string') {
-          aValue = aValue.toLowerCase();
-          bValue = bValue.toLowerCase();
+        // String columns (e.g. region, instance_type) may have null values on
+        // some rows; coerce both sides consistently so one missing value never
+        // ends up a number while the other is a string.
+        if (typeof aValue === 'string' || typeof bValue === 'string') {
+          aValue = aNil ? '' : String(aValue).toLowerCase();
+          bValue = bNil ? '' : String(bValue).toLowerCase();
+        } else {
+          aValue = aNil ? 0 : aValue;
+          bValue = bNil ? 0 : bValue;
         }
 
         if (aValue < bValue) {
@@ -97,16 +101,18 @@ const VMBrowser = () => {
 
   return (
     <Layout>
-      <div className="space-y-6">
-        {/* Filters */}
-        <VMFilters
-          filters={filters}
-          onFiltersChange={handleFiltersChange}
-          onReset={handleFiltersReset}
-        />
+      <div className="flex flex-col lg:flex-row gap-6 items-start">
+        {/* Filter sidebar */}
+        <aside className="w-full lg:w-56 lg:flex-shrink-0 lg:sticky lg:top-20">
+          <VMFilters
+            filters={filters}
+            onFiltersChange={handleFiltersChange}
+            onReset={handleFiltersReset}
+          />
+        </aside>
 
         {/* Results */}
-        <div className="space-y-4">
+        <div className="flex-1 min-w-0 space-y-4">
           {/* Results Summary */}
           <div className="flex items-center justify-between">
             <p className="text-sm text-gray-600">
@@ -144,109 +150,72 @@ const VMBrowser = () => {
               </button>
             </div>
           ) : (
-            <div className="space-y-2">
-              {/* List Header */}
-              <div className="bg-gray-50 border border-gray-200 rounded-lg p-3 text-sm font-medium text-gray-700">
-                <div className="grid grid-cols-12 gap-4 items-center">
-                  <button
-                    onClick={() => handleSort('provider')}
-                    className="col-span-2 flex items-center space-x-1 hover:text-gray-900 transition-colors text-left"
-                  >
-                    <span>Provider</span>
-                    {getSortIcon('provider')}
-                  </button>
-                  <button
-                    onClick={() => handleSort('instance_type')}
-                    className="col-span-2 flex items-center space-x-1 hover:text-gray-900 transition-colors text-left"
-                  >
-                    <span>Instance Type</span>
-                    {getSortIcon('instance_type')}
-                  </button>
-                  <button
-                    onClick={() => handleSort('vcpus')}
-                    className="col-span-1 flex items-center space-x-1 hover:text-gray-900 transition-colors text-left"
-                  >
-                    <span>vCPUs</span>
-                    {getSortIcon('vcpus')}
-                  </button>
-                  <button
-                    onClick={() => handleSort('memory_gib')}
-                    className="col-span-1 flex items-center space-x-1 hover:text-gray-900 transition-colors text-left"
-                  >
-                    <span>Memory</span>
-                    {getSortIcon('memory_gib')}
-                  </button>
-                  <button
-                    onClick={() => handleSort('region')}
-                    className="col-span-2 flex items-center space-x-1 hover:text-gray-900 transition-colors text-left"
-                  >
-                    <span>Region</span>
-                    {getSortIcon('region')}
-                  </button>
-                  <button
-                    onClick={() => handleSort('price')}
-                    className="col-span-1 flex items-center space-x-1 hover:text-gray-900 transition-colors text-left"
-                  >
-                    <span>Price/hr</span>
-                    {getSortIcon('price')}
-                  </button>
-                  <button
-                    onClick={() => handleSort('spot_price')}
-                    className="col-span-1 flex items-center space-x-1 hover:text-gray-900 transition-colors text-left"
-                  >
-                    <span>Spot Price</span>
-                    {getSortIcon('spot_price')}
-                  </button>
-                  <button
-                    onClick={() => handleSort('accelerator_count')}
-                    className="col-span-2 flex items-center space-x-1 hover:text-gray-900 transition-colors text-left"
-                  >
-                    <span>GPU</span>
-                    {getSortIcon('accelerator_count')}
-                  </button>
-                </div>
+            <div className="card overflow-hidden">
+              {/* Table header */}
+              <div className="grid grid-cols-12 gap-3 items-center px-4 py-2 bg-gray-50 border-b border-gray-200 text-xs font-medium text-gray-600 uppercase tracking-wide">
+                <button onClick={() => handleSort('provider')} className="col-span-2 flex items-center space-x-1 hover:text-gray-900 transition-colors text-left">
+                  <span>Provider</span>{getSortIcon('provider')}
+                </button>
+                <button onClick={() => handleSort('instance_type')} className="col-span-2 flex items-center space-x-1 hover:text-gray-900 transition-colors text-left">
+                  <span>Instance Type</span>{getSortIcon('instance_type')}
+                </button>
+                <button onClick={() => handleSort('vcpus')} className="col-span-1 flex items-center space-x-1 hover:text-gray-900 transition-colors text-left">
+                  <span>vCPUs</span>{getSortIcon('vcpus')}
+                </button>
+                <button onClick={() => handleSort('memory_gib')} className="col-span-1 flex items-center space-x-1 hover:text-gray-900 transition-colors text-left">
+                  <span>Memory</span>{getSortIcon('memory_gib')}
+                </button>
+                <button onClick={() => handleSort('region')} className="col-span-2 flex items-center space-x-1 hover:text-gray-900 transition-colors text-left">
+                  <span>Region</span>{getSortIcon('region')}
+                </button>
+                <button onClick={() => handleSort('price')} className="col-span-1 flex items-center space-x-1 hover:text-gray-900 transition-colors text-left">
+                  <span>Price/hr</span>{getSortIcon('price')}
+                </button>
+                <button onClick={() => handleSort('spot_price')} className="col-span-1 flex items-center space-x-1 hover:text-gray-900 transition-colors text-left">
+                  <span>Spot</span>{getSortIcon('spot_price')}
+                </button>
+                <button onClick={() => handleSort('accelerator_count')} className="col-span-2 flex items-center space-x-1 hover:text-gray-900 transition-colors text-left">
+                  <span>GPU</span>{getSortIcon('accelerator_count')}
+                </button>
               </div>
-              
-              {/* List Items */}
-              {vms.map((vm, index) => {
-                const formatPrice = (price) => {
-                  if (price === null || price === undefined || price <= 0) return 'N/A';
-                  return `$${price.toFixed(4)}`;
-                };
-                
-                const getProviderColor = (provider) => {
-                  const colors = {
-                    aws: 'bg-orange-100 text-orange-800',
-                    azure: 'bg-blue-100 text-blue-800',
-                    gcp: 'bg-green-100 text-green-800',
-                    ibm: 'bg-purple-100 text-purple-800',
-                    oci: 'bg-red-100 text-red-800',
-                    default: 'bg-gray-100 text-gray-800',
+
+              {/* Rows */}
+              <div className="divide-y divide-gray-200">
+                {vms.map((vm, index) => {
+                  const formatPrice = (price) => {
+                    if (price === null || price === undefined || price <= 0) return 'N/A';
+                    return `$${price.toFixed(4)}`;
                   };
-                  return colors[provider.toLowerCase()] || colors.default;
-                };
-                
-                return (
-                  <div
-                    key={`${vm.provider}-${vm.instance_type}-${vm.region}-${index}`}
-                    className="border border-gray-200 rounded-lg p-3 bg-white hover:bg-gray-50 transition-colors"
-                  >
-                    <div className="grid grid-cols-12 gap-4 items-center text-sm">
-                      
+
+                  const getProviderColor = (provider) => {
+                    const colors = {
+                      aws: 'bg-orange-100 text-orange-800',
+                      azure: 'bg-blue-100 text-blue-800',
+                      gcp: 'bg-green-100 text-green-800',
+                      ibm: 'bg-purple-100 text-purple-800',
+                      oci: 'bg-red-100 text-red-800',
+                      default: 'bg-gray-100 text-gray-800',
+                    };
+                    return colors[provider.toLowerCase()] || colors.default;
+                  };
+
+                  return (
+                    <div
+                      key={`${vm.provider}-${vm.instance_type}-${vm.region}-${index}`}
+                      className="grid grid-cols-12 gap-3 items-center px-4 py-2 text-sm hover:bg-gray-50 transition-colors"
+                    >
                       {/* Provider */}
-                      <div className="col-span-2">
+                      <div className="col-span-2 flex items-center gap-1 min-w-0">
                         <span className={`badge ${getProviderColor(vm.provider)}`}>
                           {vm.provider.toUpperCase()}
                         </span>
                         {vm.generation && (
-                          <span className="badge-gray ml-1 text-xs">
-                            {vm.generation}
-                          </span>
+                          <span className="text-xs text-gray-500 truncate">{vm.generation}</span>
                         )}
                       </div>
-                      
+
                       {/* Instance Type */}
-                      <div className="col-span-2 font-medium text-gray-900">
+                      <div className="col-span-2 font-medium text-gray-900 truncate">
                         {vm.instance_type
                           || (vm.accelerator_name ? `${vm.accelerator_name} (GPU)` : '—')}
                       </div>
@@ -257,60 +226,54 @@ const VMBrowser = () => {
                       </div>
 
                       {/* Memory */}
-                      <div className="col-span-1 text-gray-700">
+                      <div className="col-span-1 text-gray-700 truncate">
                         {vm.memory_gib != null ? `${vm.memory_gib} GiB` : '—'}
                       </div>
-                      
+
                       {/* Region */}
-                      <div className="col-span-2 text-gray-700">
-                        <div>{vm.region || '—'}</div>
+                      <div className="col-span-2 text-gray-700 truncate">
+                        {vm.region || '—'}
                         {vm.availability_zone && (
-                          <div className="text-xs text-gray-500">{vm.availability_zone}</div>
+                          <span className="text-gray-400"> · {vm.availability_zone}</span>
                         )}
                       </div>
-                      
+
                       {/* Price */}
                       <div className="col-span-1 font-medium text-gray-900">
                         {formatPrice(vm.price)}
                       </div>
-                      
+
                       {/* Spot Price */}
-                      <div className="col-span-1">
+                      <div className="col-span-1 whitespace-nowrap">
                         {vm.spot_price ? (
-                          <div>
-                            <div className="font-medium text-yellow-600">
-                              {formatPrice(vm.spot_price)}
-                            </div>
+                          <span className="font-medium text-yellow-600">
+                            {formatPrice(vm.spot_price)}
                             {vm.price && (
-                              <div className="text-xs text-green-600">
+                              <span className="ml-1 text-xs text-green-600">
                                 -{Math.round((1 - vm.spot_price / vm.price) * 100)}%
-                              </div>
+                              </span>
                             )}
-                          </div>
+                          </span>
                         ) : (
                           <span className="text-gray-400">N/A</span>
                         )}
                       </div>
-                      
+
                       {/* GPU */}
-                      <div className="col-span-2">
+                      <div className="col-span-2 truncate">
                         {vm.accelerator_name ? (
-                          <div className="text-green-700">
-                            <div className="font-medium text-xs">
-                              {vm.accelerator_count}x
-                            </div>
-                            <div className="text-xs">
-                              {vm.accelerator_name}
-                            </div>
-                          </div>
+                          <span className="text-green-700">
+                            <span className="font-medium">{vm.accelerator_count}x</span>{' '}
+                            <span className="text-xs">{vm.accelerator_name}</span>
+                          </span>
                         ) : (
                           <span className="text-gray-400">-</span>
                         )}
                       </div>
                     </div>
-                  </div>
-                );
-              })}
+                  );
+                })}
+              </div>
             </div>
           )}
         </div>
