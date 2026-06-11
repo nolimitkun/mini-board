@@ -202,9 +202,12 @@ cython_debug/
 *.duckdb
 *.duckdb.wal
 *.duckdb.tmp
+*.duckdb.bak.*
+*.duckdb.wal.bak.*
 
 # Downloaded data directories
 v7/
+v8/
 data/
 catalog/
 skypilot-catalog/

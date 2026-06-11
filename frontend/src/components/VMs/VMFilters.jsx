@@ -1,22 +1,39 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { X } from 'lucide-react';
 import { vmApi } from '../../services/api';
 
 const VMFilters = ({ filters, onFiltersChange, onReset }) => {
   const [providers, setProviders] = useState([]);
   const [regions, setRegions] = useState([]);
+  const didDefaultProviders = useRef(false);
 
   useEffect(() => {
     // Load providers
     vmApi.getProviders()
-      .then(response => setProviders(response.data.providers))
+      .then(response => {
+        const list = response.data.providers;
+        setProviders(list);
+        // Select all providers by default (once), unless the user already has a selection
+        if (!didDefaultProviders.current && (filters.providers || []).length === 0) {
+          didDefaultProviders.current = true;
+          onFiltersChange({ ...filters, providers: list });
+        }
+      })
       .catch(console.error);
 
     // Load regions
     vmApi.getRegions()
       .then(response => setRegions(response.data.regions))
       .catch(console.error);
-  }, []);
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+
+  const selectedProviders = filters.providers || [];
+  const allProvidersSelected = providers.length > 0 && selectedProviders.length === providers.length;
+  const someProvidersSelected = selectedProviders.length > 0 && !allProvidersSelected;
+
+  const handleSelectAllProviders = () => {
+    handleInputChange('providers', allProvidersSelected ? [] : [...providers]);
+  };
 
   const handleInputChange = (field, value) => {
     onFiltersChange({
@@ -53,12 +70,24 @@ const VMFilters = ({ filters, onFiltersChange, onReset }) => {
             <label className="block text-sm font-medium text-gray-700 mb-2">
               Cloud Providers
             </label>
-            <div className="space-y-1 max-h-20 overflow-y-auto">
+            <div className="space-y-1 max-h-24 overflow-y-auto">
+              <label className="flex items-center text-xs font-medium border-b border-gray-100 pb-1 mb-1">
+                <input
+                  type="checkbox"
+                  checked={allProvidersSelected}
+                  ref={el => { if (el) el.indeterminate = someProvidersSelected; }}
+                  onChange={handleSelectAllProviders}
+                  className="rounded border-gray-300 text-primary-600 focus:ring-primary-500 w-3 h-3"
+                />
+                <span className="ml-1 text-gray-900">
+                  Select All
+                </span>
+              </label>
               {providers.map(provider => (
                 <label key={provider} className="flex items-center text-xs">
                   <input
                     type="checkbox"
-                    checked={(filters.providers || []).includes(provider)}
+                    checked={selectedProviders.includes(provider)}
                     onChange={() => handleProviderToggle(provider)}
                     className="rounded border-gray-300 text-primary-600 focus:ring-primary-500 w-3 h-3"
                   />
@@ -175,6 +204,24 @@ const VMFilters = ({ filters, onFiltersChange, onReset }) => {
             </select>
           </div>
 
+
+          {/* Data Quality */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Data Quality
+            </label>
+            <label className="flex items-center text-xs mt-2">
+              <input
+                type="checkbox"
+                checked={filters.hide_incomplete !== false}
+                onChange={(e) => handleInputChange('hide_incomplete', e.target.checked)}
+                className="rounded border-gray-300 text-primary-600 focus:ring-primary-500 w-3 h-3"
+              />
+              <span className="ml-1 text-gray-700">
+                Hide unpriced entries
+              </span>
+            </label>
+          </div>
 
           {/* Results Limit */}
           <div>

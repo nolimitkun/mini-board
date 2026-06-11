@@ -9,7 +9,7 @@ import logging
 logger = logging.getLogger(__name__)
 
 class DuckDBLoader:
-    def __init__(self, data_dir: str = "v7", db_path: str = "vm_catalog.duckdb"):
+    def __init__(self, data_dir: str = "v8", db_path: str = "vm_catalog.duckdb"):
         self.data_dir = data_dir
         self.db_path = db_path
         self.conn = None
@@ -69,8 +69,8 @@ class DuckDBLoader:
 
     def download_github_catalog_data(self, temp_dir: str) -> bool:
         """Download VM catalog data from GitHub repository"""
-        base_url = "https://raw.githubusercontent.com/skypilot-org/skypilot-catalog/master/catalogs/v7"
-        
+        base_url = "https://raw.githubusercontent.com/skypilot-org/skypilot-catalog/master/catalogs/v8"
+
         # List of known providers and their files
         providers_files = {
             "aws": ["vms.csv", "images.csv", "instance_quota_mapping.csv"],
@@ -84,13 +84,20 @@ class DuckDBLoader:
             "do": ["vms.csv"],
             "fluidstack": ["vms.csv"],
             "hyperstack": ["vms.csv"],
+            "hyperbolic": ["vms.csv"],
             "lambda": ["vms.csv"],
+            "mithril": ["vms.csv"],
             "nebius": ["vms.csv"],
             "ovhcloud": ["vms.csv"],
             "paperspace": ["vms.csv"],
+            "primeintellect": ["vms.csv"],
             "runpod": ["vms.csv"],
             "scaleway": ["vms.csv"],
+            "seeweb": ["vms.csv"],
+            "shadeform": ["vms.csv"],
             "vast": ["vms.csv"],
+            "verda": ["vms.csv"],
+            "yotta": ["vms.csv"],
             "common": ["accelerators.csv"]
         }
         
@@ -307,7 +314,7 @@ class DuckDBLoader:
         for _, row in df.iterrows():
             data_tuples.append((
                 row['provider'],
-                row['instance_type'],
+                row['instance_type'] if pd.notna(row['instance_type']) and row['instance_type'] != 'None' else None,
                 float(row['vcpus']) if pd.notna(row['vcpus']) else None,
                 float(row['memory_gib']) if pd.notna(row['memory_gib']) else None,
                 row['accelerator_name'] if pd.notna(row['accelerator_name']) and row['accelerator_name'] != 'None' else None,
@@ -446,6 +453,7 @@ class DuckDBLoader:
                   gpu_name: Optional[str] = None,
                   region: Optional[str] = None,
                   max_price: Optional[float] = None,
+                  hide_incomplete: bool = True,
                   sort_by: str = "price",
                   sort_order: str = "asc",
                   limit: int = 100) -> pd.DataFrame:
@@ -493,20 +501,26 @@ class DuckDBLoader:
         if max_price is not None:
             where_conditions.append("price <= ?")
             params.append(max_price)
-        
+
+        if hide_incomplete:
+            # Drop rows with no usable pricing (e.g. GCP machine types the catalog
+            # hasn't priced yet). These show as "$0.0000" and pollute price sorting.
+            where_conditions.append("price IS NOT NULL AND price > 0")
+
         # Build SQL query
         sql = "SELECT * FROM vms"
-        
+
         if where_conditions:
             sql += " WHERE " + " AND ".join(where_conditions)
-        
+
         # Add sorting
         if sort_by in ['price', 'spot_price', 'vcpus', 'memory_gib', 'accelerator_count']:
-            sql += f" ORDER BY {sort_by}"
-            if sort_order.lower() == 'desc':
-                sql += " DESC"
+            direction = "DESC" if sort_order.lower() == 'desc' else "ASC"
+            if sort_by in ['price', 'spot_price']:
+                # Always push missing/zero prices to the bottom regardless of direction
+                sql += f" ORDER BY ({sort_by} IS NULL OR {sort_by} <= 0), {sort_by} {direction}"
             else:
-                sql += " ASC"
+                sql += f" ORDER BY {sort_by} {direction}"
         
         # Add limit
         sql += f" LIMIT {limit}"

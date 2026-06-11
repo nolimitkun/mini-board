@@ -20,14 +20,15 @@ class DuckDBVMService:
                 gpu_name: Optional[str] = None,
                 region: Optional[str] = None,
                 max_price: Optional[float] = None,
+                hide_incomplete: bool = True,
                 sort_by: str = "price",
                 sort_order: str = "asc",
                 limit: int = 100) -> Dict[str, Any]:
         """Get filtered and sorted VMs using DuckDB"""
-        
+
         # Get total count first
         total_count = self._get_total_count()
-        
+
         # Query VMs with filters
         df = self.db_loader.query_vms(
             providers=providers,
@@ -39,14 +40,15 @@ class DuckDBVMService:
             gpu_name=gpu_name,
             region=region,
             max_price=max_price,
+            hide_incomplete=hide_incomplete,
             sort_by=sort_by,
             sort_order=sort_order,
             limit=limit
         )
-        
+
         if df.empty:
             return {"vms": [], "total_count": total_count, "filtered_count": 0}
-        
+
         # Get filtered count (without limit)
         filtered_count = self._get_filtered_count(
             providers=providers,
@@ -57,7 +59,8 @@ class DuckDBVMService:
             has_gpu=has_gpu,
             gpu_name=gpu_name,
             region=region,
-            max_price=max_price
+            max_price=max_price,
+            hide_incomplete=hide_incomplete
         )
         
         # Convert to VM models
@@ -118,7 +121,10 @@ class DuckDBVMService:
             if region:
                 where_conditions.append("region = ?")
                 params.append(region)
-            
+
+            if filters.get('hide_incomplete'):
+                where_conditions.append("price IS NOT NULL AND price > 0")
+
             # Build SQL
             sql = "SELECT COUNT(*) FROM vms"
             if where_conditions:
@@ -263,17 +269,26 @@ class DuckDBVMService:
     
     def _row_to_vm(self, row: pd.Series) -> VM:
         """Convert DataFrame row to VM model"""
+        # Missing values stay None instead of being coerced to "nan"/0 so the UI
+        # can render them as "N/A" / "—". A price of 0 in the catalog means
+        # "no pricing available" (cloud VMs are never free), so treat it as unknown.
+        price = float(row['price']) if pd.notna(row['price']) else None
+        if price is not None and price <= 0:
+            price = None
+        spot_price = float(row['spot_price']) if pd.notna(row['spot_price']) else None
+        if spot_price is not None and spot_price <= 0:
+            spot_price = None
         return VM(
             provider=row['provider'],
-            instance_type=row['instance_type'],
-            vcpus=float(row['vcpus']) if pd.notna(row['vcpus']) else 0.0,
-            memory_gib=float(row['memory_gib']) if pd.notna(row['memory_gib']) else 0.0,
+            instance_type=row['instance_type'] if pd.notna(row['instance_type']) else None,
+            vcpus=float(row['vcpus']) if pd.notna(row['vcpus']) else None,
+            memory_gib=float(row['memory_gib']) if pd.notna(row['memory_gib']) else None,
             accelerator_name=row['accelerator_name'] if pd.notna(row['accelerator_name']) else None,
             accelerator_count=float(row['accelerator_count']) if pd.notna(row['accelerator_count']) else None,
             gpu_info=row['gpu_info'] if pd.notna(row['gpu_info']) else None,
-            price=float(row['price']) if pd.notna(row['price']) else 0.0,
-            spot_price=float(row['spot_price']) if pd.notna(row['spot_price']) else None,
-            region=row['region'],
+            price=price,
+            spot_price=spot_price,
+            region=row['region'] if pd.notna(row['region']) else None,
             availability_zone=row['availability_zone'] if pd.notna(row['availability_zone']) else None,
             generation=row['generation'] if pd.notna(row['generation']) else None
         )

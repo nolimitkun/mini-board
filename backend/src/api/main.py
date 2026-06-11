@@ -81,6 +81,7 @@ async def get_vms(
     gpu_name: Optional[str] = Query(None, description="Filter by specific GPU name"),
     region: Optional[str] = Query(None, description="Filter by region"),
     max_price: Optional[float] = Query(None, description="Maximum price per hour"),
+    hide_incomplete: bool = Query(True, description="Hide rows with no usable pricing (e.g. unpriced GCP machine types)"),
     sort_by: SortBy = Query(SortBy.price, description="Sort results by field"),
     sort_order: SortOrder = Query(SortOrder.asc, description="Sort order"),
     limit: int = Query(100, description="Maximum number of results", ge=1, le=1000)
@@ -102,6 +103,7 @@ async def get_vms(
             gpu_name=gpu_name,
             region=region,
             max_price=max_price,
+            hide_incomplete=hide_incomplete,
             sort_by=sort_by.value,
             sort_order=sort_order.value,
             limit=limit

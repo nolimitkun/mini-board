@@ -9,7 +9,7 @@ class Settings:
     
     # Database settings
     DB_PATH: str = os.getenv("DB_PATH", "vm_catalog.duckdb")
-    DATA_DIR: str = os.getenv("DATA_DIR", "v7")
+    DATA_DIR: str = os.getenv("DATA_DIR", "v8")
     
     # API settings
     API_HOST: str = os.getenv("API_HOST", "0.0.0.0")
@@ -19,7 +19,7 @@ class Settings:
     LOG_LEVEL: str = os.getenv("LOG_LEVEL", "INFO")
     
     # GitHub repository settings
-    SKYPILOT_CATALOG_URL: str = "https://github.com/skypilot-org/skypilot-catalog/tree/master/catalogs/v7"
+    SKYPILOT_CATALOG_URL: str = "https://github.com/skypilot-org/skypilot-catalog/tree/master/catalogs/v8"
     
     # CORS settings
     CORS_ORIGINS: list = ["*"]

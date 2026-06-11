@@ -3,7 +3,7 @@ import { Cpu, HardDrive, DollarSign, MapPin, Zap, Monitor } from 'lucide-react';
 
 const VMCard = ({ vm, onSelect, isSelected = false, showCompareButton = false }) => {
   const formatPrice = (price) => {
-    if (price === null || price === undefined) return 'N/A';
+    if (price === null || price === undefined || price <= 0) return 'N/A';
     return `$${price.toFixed(4)}/hr`;
   };
 
@@ -38,7 +38,8 @@ const VMCard = ({ vm, onSelect, isSelected = false, showCompareButton = false })
               )}
             </div>
             <h3 className="text-lg font-semibold text-gray-900">
-              {vm.instance_type}
+              {vm.instance_type
+                || (vm.accelerator_name ? `${vm.accelerator_name} (GPU)` : '—')}
             </h3>
           </div>
           {showCompareButton && (
@@ -59,7 +60,7 @@ const VMCard = ({ vm, onSelect, isSelected = false, showCompareButton = false })
             <Cpu className="w-4 h-4 text-gray-400" />
             <div>
               <p className="text-sm font-medium text-gray-900">
-                {vm.vcpus} vCPUs
+                {vm.vcpus != null ? `${vm.vcpus} vCPUs` : '—'}
               </p>
               <p className="text-xs text-gray-500">CPU</p>
             </div>
@@ -69,7 +70,7 @@ const VMCard = ({ vm, onSelect, isSelected = false, showCompareButton = false })
             <HardDrive className="w-4 h-4 text-gray-400" />
             <div>
               <p className="text-sm font-medium text-gray-900">
-                {vm.memory_gib} GiB
+                {vm.memory_gib != null ? `${vm.memory_gib} GiB` : '—'}
               </p>
               <p className="text-xs text-gray-500">Memory</p>
             </div>
@@ -93,7 +94,7 @@ const VMCard = ({ vm, onSelect, isSelected = false, showCompareButton = false })
         <div className="flex items-center space-x-2 mb-4">
           <MapPin className="w-4 h-4 text-gray-400" />
           <div>
-            <p className="text-sm font-medium text-gray-900">{vm.region}</p>
+            <p className="text-sm font-medium text-gray-900">{vm.region || '—'}</p>
             {vm.availability_zone && (
               <p className="text-xs text-gray-500">{vm.availability_zone}</p>
             )}

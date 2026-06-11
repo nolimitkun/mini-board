@@ -11,7 +11,8 @@ const VMBrowser = () => {
   const [filters, setFilters] = useState({
     providers: [],
     limit: 100,
-    gpu_name: 'H100'
+    gpu_name: 'H100',
+    hide_incomplete: true
   });
   const [selectedVMs, setSelectedVMs] = useState([]);
   const [sortConfig, setSortConfig] = useState({ key: 'price', direction: 'asc' });
@@ -38,7 +39,8 @@ const VMBrowser = () => {
     setFilters({
       providers: [],
       limit: 100,
-      gpu_name: 'H100'
+      gpu_name: 'H100',
+      hide_incomplete: true
     });
   };
 
@@ -234,7 +236,7 @@ const VMBrowser = () => {
               {/* List Items */}
               {vms.map((vm, index) => {
                 const formatPrice = (price) => {
-                  if (price === null || price === undefined) return 'N/A';
+                  if (price === null || price === undefined || price <= 0) return 'N/A';
                   return `$${price.toFixed(4)}`;
                 };
                 
@@ -273,22 +275,23 @@ const VMBrowser = () => {
                       
                       {/* Instance Type */}
                       <div className="col-span-2 font-medium text-gray-900">
-                        {vm.instance_type}
+                        {vm.instance_type
+                          || (vm.accelerator_name ? `${vm.accelerator_name} (GPU)` : '—')}
                       </div>
-                      
+
                       {/* vCPUs */}
                       <div className="col-span-1 text-gray-700">
-                        {vm.vcpus}
+                        {vm.vcpus != null ? vm.vcpus : '—'}
                       </div>
-                      
+
                       {/* Memory */}
                       <div className="col-span-1 text-gray-700">
-                        {vm.memory_gib} GiB
+                        {vm.memory_gib != null ? `${vm.memory_gib} GiB` : '—'}
                       </div>
                       
                       {/* Region */}
                       <div className="col-span-2 text-gray-700">
-                        <div>{vm.region}</div>
+                        <div>{vm.region || '—'}</div>
                         {vm.availability_zone && (
                           <div className="text-xs text-gray-500">{vm.availability_zone}</div>
                         )}
