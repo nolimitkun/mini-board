@@ -1,7 +1,7 @@
 """VM-related data models"""
 
 from pydantic import BaseModel
-from typing import Optional, List
+from typing import Optional
 from enum import Enum
 
 
@@ -16,13 +16,6 @@ class SortBy(str, Enum):
     vcpus = "vcpus"
     memory = "memory"
     gpu_count = "gpu_count"
-
-
-class WorkloadType(str, Enum):
-    compute = "compute"
-    memory = "memory"
-    gpu = "gpu"
-    balanced = "balanced"
 
 
 class VM(BaseModel):
@@ -43,42 +36,7 @@ class VM(BaseModel):
     generation: Optional[str] = None
 
 
-class VMCompareRequest(BaseModel):
-    provider: str
-    instance_type: str
-    region: str
-
-
-class CompareRequest(BaseModel):
-    vms: List[VMCompareRequest]
-
-
-class Requirements(BaseModel):
-    min_vcpus: Optional[float] = None
-    min_memory: Optional[float] = None
-    gpu_required: Optional[bool] = False
-    max_budget: Optional[float] = None
-    preferred_regions: Optional[List[str]] = None
-    workload_type: Optional[WorkloadType] = WorkloadType.balanced
-
-
-class RecommendationRequest(BaseModel):
-    requirements: Requirements
-
-
-class VMRecommendation(VM):
-    score: float
-    reasoning: str
-
-
 class PriceRange(BaseModel):
     min: float
     max: float
     avg: float
-
-
-class ComparisonSummary(BaseModel):
-    cheapest: VM
-    most_powerful: VM
-    best_value: VM
-    price_difference: PriceRange

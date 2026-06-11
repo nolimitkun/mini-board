@@ -58,34 +58,6 @@ def main():
     # Test regions
     test_endpoint("/regions")
     test_endpoint("/regions?provider=aws")
-    
-    # Test VM comparison
-    compare_data = {
-        "vms": [
-            {
-                "provider": "aws",
-                "instance_type": "m5.large",
-                "region": "us-east-1"
-            },
-            {
-                "provider": "azure",
-                "instance_type": "Standard_D2s_v3",
-                "region": "eastus"
-            }
-        ]
-    }
-    test_endpoint("/vms/compare", "POST", compare_data)
-    
-    # Test recommendations
-    recommendation_data = {
-        "requirements": {
-            "min_vcpus": 2,
-            "min_memory": 4,
-            "max_budget": 0.5,
-            "workload_type": "balanced"
-        }
-    }
-    test_endpoint("/vms/recommendations", "POST", recommendation_data)
 
 if __name__ == "__main__":
     main()

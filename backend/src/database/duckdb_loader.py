@@ -533,20 +533,6 @@ class DuckDBLoader:
             logger.error(f"Error executing query: {e}")
             return pd.DataFrame()
     
-    def get_vm_by_details(self, provider: str, instance_type: str, region: str) -> pd.DataFrame:
-        """Get specific VM by provider, instance type, and region"""
-        sql = """
-            SELECT * FROM vms 
-            WHERE provider = ? AND instance_type = ? AND region = ?
-            LIMIT 1
-        """
-        try:
-            result = self.conn.execute(sql, [provider, instance_type, region]).df()
-            return result
-        except Exception as e:
-            logger.error(f"Error getting VM details: {e}")
-            return pd.DataFrame()
-    
     def get_providers(self) -> List[str]:
         """Get list of available providers"""
         if not self.providers:

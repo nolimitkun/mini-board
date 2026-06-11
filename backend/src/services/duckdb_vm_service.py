@@ -1,6 +1,6 @@
 import pandas as pd
 from typing import List, Optional, Dict, Any
-from ..models import VM, VMRecommendation, ComparisonSummary, PriceRange, Requirements, WorkloadType
+from ..models import VM
 from ..database.duckdb_loader import duckdb_loader
 import logging
 
@@ -137,124 +137,6 @@ class DuckDBVMService:
             logger.error(f"Error getting filtered count: {e}")
             return 0
     
-    def compare_vms(self, vm_requests: List[Dict[str, str]]) -> Dict[str, Any]:
-        """Compare specific VMs"""
-        vms = []
-        
-        for req in vm_requests:
-            provider = req['provider']
-            instance_type = req['instance_type']
-            region = req['region']
-            
-            df = self.db_loader.get_vm_by_details(provider, instance_type, region)
-            if not df.empty:
-                vm = self._dataframe_to_vms(df)[0]
-                vms.append(vm)
-        
-        if not vms:
-            return {"comparison": [], "summary": None}
-        
-        # Generate comparison summary
-        summary = self._generate_comparison_summary(vms)
-        
-        return {
-            "comparison": vms,
-            "summary": summary
-        }
-    
-    def get_recommendations(self, requirements: Requirements) -> List[VMRecommendation]:
-        """Get VM recommendations based on requirements using SQL"""
-        try:
-            # Build SQL query for recommendations
-            where_conditions = []
-            params = []
-            
-            # Apply hard filters
-            if requirements.min_vcpus:
-                where_conditions.append("vcpus >= ?")
-                params.append(requirements.min_vcpus)
-            
-            if requirements.min_memory:
-                where_conditions.append("memory_gib >= ?")
-                params.append(requirements.min_memory)
-            
-            if requirements.gpu_required:
-                where_conditions.append("accelerator_name IS NOT NULL")
-            
-            if requirements.max_budget:
-                where_conditions.append("price <= ?")
-                params.append(requirements.max_budget)
-            
-            if requirements.preferred_regions:
-                placeholders = ','.join(['?' for _ in requirements.preferred_regions])
-                where_conditions.append(f"region IN ({placeholders})")
-                params.extend(requirements.preferred_regions)
-            
-            # Build base SQL
-            sql = "SELECT *, "
-            
-            # Calculate score based on workload type
-            workload_type = requirements.workload_type or WorkloadType.balanced
-            
-            if workload_type == WorkloadType.compute:
-                sql += "vcpus * 10 / (price + 0.01) as raw_score"
-            elif workload_type == WorkloadType.memory:
-                sql += "memory_gib * 5 / (price + 0.01) as raw_score"
-            elif workload_type == WorkloadType.gpu:
-                sql += "COALESCE(accelerator_count, 0) * 50 / (price + 0.01) as raw_score"
-            else:  # balanced
-                sql += "(vcpus * 5 + memory_gib * 2 + COALESCE(accelerator_count, 0) * 20) / (price + 0.01) as raw_score"
-            
-            sql += " FROM vms"
-            
-            if where_conditions:
-                sql += " WHERE " + " AND ".join(where_conditions)
-            
-            sql += " ORDER BY raw_score DESC LIMIT 10"
-            
-            # Execute query
-            df = self.db_loader.conn.execute(sql, params).df()
-            
-            if df.empty:
-                return []
-            
-            # Normalize scores to 0-100 range
-            max_score = df['raw_score'].max()
-            if max_score > 0:
-                df['score'] = (df['raw_score'] / max_score) * 100
-            else:
-                df['score'] = 0
-            
-            # Add reasoning based on workload type
-            if workload_type == WorkloadType.compute:
-                df['reasoning'] = "Optimized for compute-intensive workloads"
-            elif workload_type == WorkloadType.memory:
-                df['reasoning'] = "Optimized for memory-intensive workloads"
-            elif workload_type == WorkloadType.gpu:
-                df['reasoning'] = df.apply(
-                    lambda row: "Optimized for GPU workloads" if pd.notna(row['accelerator_name']) else "No GPU available",
-                    axis=1
-                )
-            else:
-                df['reasoning'] = "Balanced performance across CPU, memory, and GPU"
-            
-            # Convert to recommendations
-            recommendations = []
-            for _, row in df.iterrows():
-                vm = self._row_to_vm(row)
-                recommendation = VMRecommendation(
-                    **vm.dict(),
-                    score=float(row['score']),
-                    reasoning=row['reasoning']
-                )
-                recommendations.append(recommendation)
-            
-            return recommendations
-            
-        except Exception as e:
-            logger.error(f"Error getting recommendations: {e}")
-            return []
-    
     def get_stats(self) -> Dict[str, Any]:
         """Get statistics about the VM catalog"""
         return self.db_loader.get_stats()
@@ -291,44 +173,6 @@ class DuckDBVMService:
             region=row['region'] if pd.notna(row['region']) else None,
             availability_zone=row['availability_zone'] if pd.notna(row['availability_zone']) else None,
             generation=row['generation'] if pd.notna(row['generation']) else None
-        )
-    
-    def _generate_comparison_summary(self, vms: List[VM]) -> ComparisonSummary:
-        """Generate comparison summary for a list of VMs"""
-        if not vms:
-            return None
-        
-        # Find cheapest
-        cheapest = min(vms, key=lambda x: x.price)
-        
-        # Find most powerful (by vCPUs + memory + GPU count)
-        def power_score(vm):
-            gpu_score = (vm.accelerator_count or 0) * 10  # Weight GPU heavily
-            return vm.vcpus + (vm.memory_gib / 4) + gpu_score
-        
-        most_powerful = max(vms, key=power_score)
-        
-        # Find best value (power per dollar)
-        def value_score(vm):
-            if vm.price == 0:
-                return 0
-            return power_score(vm) / vm.price
-        
-        best_value = max(vms, key=value_score)
-        
-        # Price statistics
-        prices = [vm.price for vm in vms]
-        price_range = PriceRange(
-            min=min(prices),
-            max=max(prices),
-            avg=sum(prices) / len(prices)
-        )
-        
-        return ComparisonSummary(
-            cheapest=cheapest,
-            most_powerful=most_powerful,
-            best_value=best_value,
-            price_difference=price_range
         )
 
 # Global instance

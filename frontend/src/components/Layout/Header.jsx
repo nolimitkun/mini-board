@@ -1,6 +1,6 @@
 import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { Cloud, BarChart3, GitCompare, Lightbulb, Settings } from 'lucide-react';
+import { Cloud, BarChart3, Settings } from 'lucide-react';
 
 const Header = () => {
   const location = useLocation();

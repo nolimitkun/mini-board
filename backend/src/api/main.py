@@ -5,12 +5,12 @@ import logging
 from contextlib import asynccontextmanager
 
 from ..models import (
-    ProvidersResponse, VMsResponse, CompareRequest, CompareResponse,
-    RecommendationRequest, RecommendationResponse, RegionsResponse, StatsResponse,
+    ProvidersResponse, VMsResponse, RegionsResponse, StatsResponse,
     SortBy, SortOrder
 )
 from ..services.duckdb_vm_service import duckdb_vm_service
 from ..database.duckdb_loader import duckdb_loader
+from config.settings import settings
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
@@ -44,10 +44,10 @@ app = FastAPI(
 # Add CORS middleware
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
+    allow_origins=settings.CORS_ORIGINS,
+    allow_credentials=settings.CORS_ALLOW_CREDENTIALS,
+    allow_methods=settings.CORS_ALLOW_METHODS,
+    allow_headers=settings.CORS_ALLOW_HEADERS,
 )
 
 @app.get("/", tags=["Root"])
@@ -112,36 +112,6 @@ async def get_vms(
         return VMsResponse(**result)
     except Exception as e:
         logger.error(f"Error getting VMs: {e}")
-        raise HTTPException(status_code=500, detail="Internal server error")
-
-@app.post("/vms/compare", response_model=CompareResponse, tags=["VMs"])
-async def compare_vms(request: CompareRequest):
-    """Compare specific VMs"""
-    try:
-        if not request.vms:
-            raise HTTPException(status_code=400, detail="At least one VM must be provided")
-        
-        vm_requests = [vm.model_dump() for vm in request.vms]
-        result = duckdb_vm_service.compare_vms(vm_requests)
-        
-        if not result["comparison"]:
-            raise HTTPException(status_code=404, detail="No VMs found matching the criteria")
-        
-        return CompareResponse(**result)
-    except HTTPException:
-        raise
-    except Exception as e:
-        logger.error(f"Error comparing VMs: {e}")
-        raise HTTPException(status_code=500, detail="Internal server error")
-
-@app.post("/vms/recommendations", response_model=RecommendationResponse, tags=["VMs"])
-async def get_recommendations(request: RecommendationRequest):
-    """Get VM recommendations based on requirements"""
-    try:
-        recommendations = duckdb_vm_service.get_recommendations(request.requirements)
-        return RecommendationResponse(recommendations=recommendations)
-    except Exception as e:
-        logger.error(f"Error getting recommendations: {e}")
         raise HTTPException(status_code=500, detail="Internal server error")
 
 @app.get("/regions", response_model=RegionsResponse, tags=["Regions"])

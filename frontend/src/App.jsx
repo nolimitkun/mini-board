@@ -5,8 +5,6 @@ import { ReactQueryDevtools } from 'react-query/devtools';
 
 // Pages
 import VMBrowser from './pages/VMBrowser';
-import VMCompare from './pages/VMCompare';
-import VMRecommendations from './pages/VMRecommendations';
 import Statistics from './pages/Statistics';
 import Admin from './pages/Admin';
 

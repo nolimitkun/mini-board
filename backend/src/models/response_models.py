@@ -2,7 +2,7 @@
 
 from pydantic import BaseModel
 from typing import List
-from .vm_models import VM, VMRecommendation, ComparisonSummary, PriceRange
+from .vm_models import VM, PriceRange
 
 
 class ProvidersResponse(BaseModel):
@@ -13,15 +13,6 @@ class VMsResponse(BaseModel):
     vms: List[VM]
     total_count: int
     filtered_count: int
-
-
-class CompareResponse(BaseModel):
-    comparison: List[VM]
-    summary: ComparisonSummary
-
-
-class RecommendationResponse(BaseModel):
-    recommendations: List[VMRecommendation]
 
 
 class RegionsResponse(BaseModel):
