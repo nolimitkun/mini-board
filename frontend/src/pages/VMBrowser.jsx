@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useMemo } from 'react';
 import { useQuery } from 'react-query';
 import { vmApi } from '../services/api';
 import Layout from '../components/Layout/Layout';
@@ -14,7 +14,6 @@ const VMBrowser = () => {
     gpu_name: 'H100',
     hide_incomplete: true
   });
-  const [selectedVMs, setSelectedVMs] = useState([]);
   const [sortConfig, setSortConfig] = useState({ key: 'price', direction: 'asc' });
 
   const {
@@ -44,31 +43,6 @@ const VMBrowser = () => {
     });
   };
 
-  const handleVMSelect = (vm) => {
-    const vmKey = `${vm.provider}-${vm.instance_type}-${vm.region}`;
-    setSelectedVMs(prev => {
-      const isSelected = prev.some(selected => 
-        `${selected.provider}-${selected.instance_type}-${selected.region}` === vmKey
-      );
-      
-      if (isSelected) {
-        return prev.filter(selected => 
-          `${selected.provider}-${selected.instance_type}-${selected.region}` !== vmKey
-        );
-      } else {
-        return [...prev, vm];
-      }
-    });
-  };
-
-  const isVMSelected = (vm) => {
-    const vmKey = `${vm.provider}-${vm.instance_type}-${vm.region}`;
-    return selectedVMs.some(selected => 
-      `${selected.provider}-${selected.instance_type}-${selected.region}` === vmKey
-    );
-  };
-
-  const rawVms = vmData?.data?.vms || [];
   const totalCount = vmData?.data?.total_count || 0;
   const filteredCount = vmData?.data?.filtered_count || 0;
 
@@ -83,7 +57,7 @@ const VMBrowser = () => {
 
   // Sort VMs based on current sort configuration
   const vms = useMemo(() => {
-    const sortableVMs = [...rawVms];
+    const sortableVMs = [...(vmData?.data?.vms || [])];
     if (sortConfig.key) {
       sortableVMs.sort((a, b) => {
         let aValue = a[sortConfig.key];
@@ -109,7 +83,7 @@ const VMBrowser = () => {
       });
     }
     return sortableVMs;
-  }, [rawVms, sortConfig]);
+  }, [vmData, sortConfig]);
 
   // Get sort icon for column headers
   const getSortIcon = (columnKey) => {
@@ -255,9 +229,7 @@ const VMBrowser = () => {
                 return (
                   <div
                     key={`${vm.provider}-${vm.instance_type}-${vm.region}-${index}`}
-                    className={`border border-gray-200 rounded-lg p-3 hover:bg-gray-50 transition-colors ${
-                      isVMSelected(vm) ? 'ring-2 ring-primary-500 bg-primary-50' : 'bg-white'
-                    }`}
+                    className="border border-gray-200 rounded-lg p-3 bg-white hover:bg-gray-50 transition-colors"
                   >
                     <div className="grid grid-cols-12 gap-4 items-center text-sm">
                       

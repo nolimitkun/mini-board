@@ -4,7 +4,7 @@ import { vmApi } from '../services/api';
 import Layout from '../components/Layout/Layout';
 import LoadingSpinner from '../components/Common/LoadingSpinner';
 import ErrorMessage from '../components/Common/ErrorMessage';
-import { BarChart3, Server, DollarSign, Globe, Monitor, TrendingUp } from 'lucide-react';
+import { Server, DollarSign, Globe, Monitor, TrendingUp } from 'lucide-react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
 
 const Statistics = () => {

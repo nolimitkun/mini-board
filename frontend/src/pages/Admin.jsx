@@ -4,7 +4,7 @@ import { vmApi } from '../services/api';
 import Layout from '../components/Layout/Layout';
 import LoadingSpinner from '../components/Common/LoadingSpinner';
 import ErrorMessage from '../components/Common/ErrorMessage';
-import { Settings, Database, RefreshCw, Activity, AlertCircle, CheckCircle, Eye } from 'lucide-react';
+import { Database, RefreshCw, Activity, AlertCircle, CheckCircle, Eye } from 'lucide-react';
 
 const Admin = () => {
   const [previewRows, setPreviewRows] = useState(5);
@@ -14,8 +14,7 @@ const Admin = () => {
   const {
     data: healthData,
     isLoading: healthLoading,
-    error: healthError,
-    refetch: refetchHealth
+    error: healthError
   } = useQuery('health', vmApi.healthCheck, {
     refetchInterval: 30000, // Refresh every 30 seconds
     staleTime: 10000,
