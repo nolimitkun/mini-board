@@ -121,8 +121,6 @@ The backend provides a comprehensive REST API:
 | `/reload` | POST | Re-download the catalog from SkyPilot's GitHub |
 | `/health` | GET | Health check |
 
-> Note: `/vms/compare` and `/vms/recommendations` endpoints still exist for API consumers, but the corresponding UI pages have been removed.
-
 ## Development
 
 ### Frontend Development
@@ -254,7 +252,7 @@ This project uses SkyPilot's cloud resource catalog data. Please refer to SkyPil
 - **SkyPilot v8 Catalog**: Upgraded data source from v7 to v8 (25 providers, including Hyperbolic, Mithril, Prime Intellect, Seeweb, Shadeform, Verda, Yotta)
 - **Graceful Missing Data**: Optional VM fields surface as null instead of `nan`/`0`; `hide_incomplete` filter (default on) hides unpriced rows and de-prioritizes them in price sorting
 - **VM Browser**: All providers selected by default with a "Select All" checkbox
-- **Streamlined UI**: Removed the Compare and Recommendations pages
+- **Streamlined UI**: Removed the Compare and Recommendations pages, along with their `/vms/compare` and `/vms/recommendations` API endpoints
 
 ### v2.0.0
 - **Reorganized Structure**: Separated frontend and backend into distinct directories
