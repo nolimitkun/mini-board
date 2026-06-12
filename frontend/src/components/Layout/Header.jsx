@@ -1,12 +1,13 @@
 import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { Cloud, BarChart3, Settings } from 'lucide-react';
+import { Cloud, BarChart3, Settings, Boxes } from 'lucide-react';
 
 const Header = () => {
   const location = useLocation();
 
   const navigation = [
     { name: 'VMs', href: '/', icon: Cloud },
+    { name: 'Kubernetes', href: '/k8s', icon: Boxes },
     { name: 'Statistics', href: '/stats', icon: BarChart3 },
     { name: 'Admin', href: '/admin', icon: Settings },
   ];

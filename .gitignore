@@ -208,7 +208,8 @@ cython_debug/
 # Downloaded data directories
 v7/
 v8/
-data/
+/data/
+backend/data/
 catalog/
 skypilot-catalog/
 

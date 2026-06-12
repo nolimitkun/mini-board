@@ -5,6 +5,7 @@ import Layout from '../components/Layout/Layout';
 import VMFilters from '../components/VMs/VMFilters';
 import LoadingSpinner from '../components/Common/LoadingSpinner';
 import ErrorMessage from '../components/Common/ErrorMessage';
+import GpuCell from '../components/Common/GpuCell';
 import { Search, ChevronUp, ChevronDown } from 'lucide-react';
 
 const VMBrowser = () => {
@@ -261,14 +262,11 @@ const VMBrowser = () => {
 
                       {/* GPU */}
                       <div className="col-span-2 truncate">
-                        {vm.accelerator_name ? (
-                          <span className="text-green-700">
-                            <span className="font-medium">{vm.accelerator_count}x</span>{' '}
-                            <span className="text-xs">{vm.accelerator_name}</span>
-                          </span>
-                        ) : (
-                          <span className="text-gray-400">-</span>
-                        )}
+                        <GpuCell
+                          name={vm.accelerator_name}
+                          count={vm.accelerator_count}
+                          gpuInfo={vm.gpu_info}
+                        />
                       </div>
                     </div>
                   );
