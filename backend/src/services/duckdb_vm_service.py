@@ -19,6 +19,7 @@ class DuckDBVMService:
                 has_gpu: Optional[bool] = None,
                 gpu_name: Optional[str] = None,
                 region: Optional[str] = None,
+                region_contains: Optional[str] = None,
                 max_price: Optional[float] = None,
                 hide_incomplete: bool = True,
                 sort_by: str = "price",
@@ -39,6 +40,7 @@ class DuckDBVMService:
             has_gpu=has_gpu,
             gpu_name=gpu_name,
             region=region,
+            region_contains=region_contains,
             max_price=max_price,
             hide_incomplete=hide_incomplete,
             sort_by=sort_by,
@@ -59,6 +61,7 @@ class DuckDBVMService:
             has_gpu=has_gpu,
             gpu_name=gpu_name,
             region=region,
+            region_contains=region_contains,
             max_price=max_price,
             hide_incomplete=hide_incomplete
         )
@@ -121,6 +124,11 @@ class DuckDBVMService:
             if region:
                 where_conditions.append("region = ?")
                 params.append(region)
+
+            region_contains = filters.get('region_contains')
+            if region_contains:
+                where_conditions.append("region ILIKE ?")
+                params.append(f'%{region_contains}%')
 
             if filters.get('hide_incomplete'):
                 where_conditions.append("price IS NOT NULL AND price > 0")
