@@ -63,10 +63,9 @@ const K8sBrowser = () => {
 
   const selected = useMemo(() => filters.providers || [], [filters.providers]);
 
-  // Worker-node attribute filters are pushed down to the catalog query so the
-  // backend does the heavy lifting (and the result set stays small). Region is
-  // a free-text "contains" match applied client-side, since the backend only
-  // does exact region matches and these span many providers.
+  // Worker-node attribute filters — including the free-text region match — are
+  // pushed down to the catalog query so the backend does the heavy lifting and
+  // filtering happens before the per-provider row cap, not after it.
   const nodeParams = useMemo(() => ({
     hide_incomplete: true,
     sort_by: 'price',
@@ -79,9 +78,10 @@ const K8sBrowser = () => {
     max_price: filters.max_price || undefined,
     has_gpu: filters.has_gpu ? true : undefined,
     gpu_name: filters.gpu_name || undefined,
+    region_contains: (filters.region || '').trim() || undefined,
   }), [
     filters.min_vcpus, filters.max_vcpus, filters.min_memory, filters.max_memory,
-    filters.max_price, filters.has_gpu, filters.gpu_name,
+    filters.max_price, filters.has_gpu, filters.gpu_name, filters.region,
   ]);
 
   // Query each provider separately so every one gets its full allotment of
@@ -131,12 +131,10 @@ const K8sBrowser = () => {
   // Flatten: each worker node becomes a top-level row tagged with its service.
   const rows = useMemo(() => {
     const services = k8sServices.filter((s) => selected.includes(s.provider));
-    const regionTerm = (filters.region || '').trim().toLowerCase();
 
     const flat = [];
     services.forEach((s) => {
       (nodesByProvider[s.provider] || []).forEach((vm, i) => {
-        if (regionTerm && !(vm.region || '').toLowerCase().includes(regionTerm)) return;
         flat.push({
           id: `${s.provider}-${s.short}-${vm.instance_type}-${vm.region}-${i}`,
           provider: s.provider,
@@ -174,7 +172,7 @@ const K8sBrowser = () => {
       return 0;
     });
     return flat;
-  }, [filters, sortConfig, nodesByProvider, selected]);
+  }, [sortConfig, nodesByProvider, selected]);
 
   const serviceCount = useMemo(() => new Set(rows.map((r) => r.short)).size, [rows]);
 

@@ -452,6 +452,7 @@ class DuckDBLoader:
                   has_gpu: Optional[bool] = None,
                   gpu_name: Optional[str] = None,
                   region: Optional[str] = None,
+                  region_contains: Optional[str] = None,
                   max_price: Optional[float] = None,
                   hide_incomplete: bool = True,
                   sort_by: str = "price",
@@ -497,7 +498,11 @@ class DuckDBLoader:
         if region:
             where_conditions.append("region = ?")
             params.append(region)
-        
+
+        if region_contains:
+            where_conditions.append("region ILIKE ?")
+            params.append(f'%{region_contains}%')
+
         if max_price is not None:
             where_conditions.append("price <= ?")
             params.append(max_price)
