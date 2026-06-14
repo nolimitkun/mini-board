@@ -3,6 +3,7 @@
 from pydantic import BaseModel
 from typing import List
 from .vm_models import VM, PriceRange
+from .llm_models import LLMModel
 
 
 class ProvidersResponse(BaseModel):
@@ -25,3 +26,13 @@ class StatsResponse(BaseModel):
     gpu_instances_count: int
     regions_count: int
     price_range: PriceRange
+
+
+class LLMProvidersResponse(BaseModel):
+    providers: List[str]
+
+
+class LLMModelsResponse(BaseModel):
+    models: List[LLMModel]
+    total_count: int
+    filtered_count: int

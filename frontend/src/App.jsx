@@ -6,6 +6,7 @@ import { ReactQueryDevtools } from 'react-query/devtools';
 // Pages
 import VMBrowser from './pages/VMBrowser';
 import K8sBrowser from './pages/K8sBrowser';
+import LLMBrowser from './pages/LLMBrowser';
 import Statistics from './pages/Statistics';
 import Admin from './pages/Admin';
 
@@ -28,6 +29,7 @@ function App() {
           <Routes>
             <Route path="/" element={<VMBrowser />} />
             <Route path="/k8s" element={<K8sBrowser />} />
+            <Route path="/llms" element={<LLMBrowser />} />
             <Route path="/stats" element={<Statistics />} />
             <Route path="/admin" element={<Admin />} />
           </Routes>

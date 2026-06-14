@@ -7,11 +7,18 @@ from .vm_models import (
     SortBy
 )
 
+from .llm_models import (
+    LLMModel,
+    LLMSortBy
+)
+
 from .response_models import (
     ProvidersResponse,
     VMsResponse,
     RegionsResponse,
-    StatsResponse
+    StatsResponse,
+    LLMProvidersResponse,
+    LLMModelsResponse
 )
 
 __all__ = [
@@ -19,8 +26,12 @@ __all__ = [
     "PriceRange",
     "SortOrder",
     "SortBy",
+    "LLMModel",
+    "LLMSortBy",
     "ProvidersResponse",
     "VMsResponse",
     "RegionsResponse",
-    "StatsResponse"
+    "StatsResponse",
+    "LLMProvidersResponse",
+    "LLMModelsResponse"
 ]

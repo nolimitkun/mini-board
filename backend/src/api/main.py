@@ -6,9 +6,11 @@ from contextlib import asynccontextmanager
 
 from ..models import (
     ProvidersResponse, VMsResponse, RegionsResponse, StatsResponse,
-    SortBy, SortOrder
+    SortBy, SortOrder,
+    LLMProvidersResponse, LLMModelsResponse, LLMSortBy
 )
 from ..services.duckdb_vm_service import duckdb_vm_service
+from ..services.llm_service import llm_catalog_service
 from ..database.duckdb_loader import duckdb_loader
 from config.settings import settings
 
@@ -26,6 +28,14 @@ async def lifespan(app: FastAPI):
     except Exception as e:
         logger.error(f"Failed to load data: {e}")
         raise
+
+    # Load the LLM catalog from the remote model aggregate. Non-fatal: a source
+    # outage should not block the VM API from starting.
+    logger.info("Loading LLM model catalog...")
+    try:
+        llm_catalog_service.load()
+    except Exception as e:
+        logger.error(f"Failed to load LLM catalog: {e}")
     
     yield
     
@@ -166,6 +176,62 @@ async def reload_vm_data():
     except Exception as e:
         logger.error(f"Error reloading VM data: {e}")
         raise HTTPException(status_code=500, detail=f"Failed to reload VM data: {str(e)}")
+
+@app.get("/llm/providers", response_model=LLMProvidersResponse, tags=["LLMs"])
+async def get_llm_providers():
+    """Get list of providers that serve LLM models"""
+    try:
+        return LLMProvidersResponse(providers=llm_catalog_service.get_providers())
+    except Exception as e:
+        logger.error(f"Error getting LLM providers: {e}")
+        raise HTTPException(status_code=500, detail="Internal server error")
+
+
+@app.get("/llm/models", response_model=LLMModelsResponse, tags=["LLMs"])
+async def get_llm_models(
+    providers: Optional[str] = Query(None, description="Comma-separated list of provider codes"),
+    search: Optional[str] = Query(None, description="Match model name, developer, or model id (case-insensitive)"),
+    min_context: Optional[int] = Query(None, description="Minimum context window in tokens"),
+    max_input_price: Optional[float] = Query(None, description="Maximum input price per 1M tokens (USD)"),
+    vision_only: bool = Query(False, description="Only models with a vision modality"),
+    sort_by: LLMSortBy = Query(LLMSortBy.input_price, description="Sort results by field"),
+    sort_order: SortOrder = Query(SortOrder.asc, description="Sort order"),
+    limit: Optional[int] = Query(None, description="Max models to return (page size)", ge=1, le=500),
+    offset: int = Query(0, description="Number of models to skip (pagination)", ge=0),
+):
+    """Get LLM models across cloud providers with filtering + pagination"""
+    try:
+        provider_list = None
+        if providers is not None:
+            provider_list = [p.strip() for p in providers.split(",") if p.strip()]
+
+        result = llm_catalog_service.get_models(
+            providers=provider_list,
+            search=search,
+            min_context=min_context,
+            max_input_price=max_input_price,
+            vision_only=vision_only,
+            sort_by=sort_by.value,
+            sort_order=sort_order.value,
+            limit=limit,
+            offset=offset,
+        )
+        return LLMModelsResponse(**result)
+    except Exception as e:
+        logger.error(f"Error getting LLM models: {e}")
+        raise HTTPException(status_code=500, detail="Internal server error")
+
+
+@app.post("/llm/reload", tags=["LLMs"])
+async def reload_llm_catalog():
+    """Re-fetch the LLM model catalog from the source"""
+    try:
+        count = llm_catalog_service.reload()
+        return {"message": "LLM catalog reloaded", "models": count}
+    except Exception as e:
+        logger.error(f"Error reloading LLM catalog: {e}")
+        raise HTTPException(status_code=500, detail=f"Failed to reload LLM catalog: {str(e)}")
+
 
 @app.get("/health", tags=["Health"])
 async def health_check():
