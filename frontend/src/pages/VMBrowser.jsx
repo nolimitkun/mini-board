@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { useQuery } from 'react-query';
 import { vmApi } from '../services/api';
 import Layout from '../components/Layout/Layout';
@@ -6,6 +6,7 @@ import VMFilters from '../components/VMs/VMFilters';
 import LoadingSpinner from '../components/Common/LoadingSpinner';
 import ErrorMessage from '../components/Common/ErrorMessage';
 import GpuCell from '../components/Common/GpuCell';
+import Pagination from '../components/Common/Pagination';
 import { Search, ChevronUp, ChevronDown } from 'lucide-react';
 
 const VMBrowser = () => {
@@ -16,6 +17,8 @@ const VMBrowser = () => {
     hide_incomplete: true
   });
   const [sortConfig, setSortConfig] = useState({ key: 'price', direction: 'asc' });
+  const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(50);
 
   const {
     data: vmData,
@@ -90,6 +93,16 @@ const VMBrowser = () => {
     return sortableVMs;
   }, [vmData, sortConfig]);
 
+  // Reset to the first page whenever the result set or page size changes.
+  useEffect(() => { setPage(1); }, [filters, sortConfig, pageSize]);
+
+  const totalPages = Math.max(1, Math.ceil(vms.length / pageSize));
+  const safePage = Math.min(page, totalPages);
+  const pageVms = useMemo(
+    () => vms.slice((safePage - 1) * pageSize, safePage * pageSize),
+    [vms, safePage, pageSize]
+  );
+
   // Get sort icon for column headers
   const getSortIcon = (columnKey) => {
     if (sortConfig.key !== columnKey) {
@@ -151,6 +164,7 @@ const VMBrowser = () => {
               </button>
             </div>
           ) : (
+            <>
             <div className="card overflow-hidden">
               {/* Table header */}
               <div className="grid grid-cols-12 gap-3 items-center px-4 py-2 bg-gray-50 border-b border-gray-200 text-xs font-medium text-gray-600 uppercase tracking-wide">
@@ -182,7 +196,7 @@ const VMBrowser = () => {
 
               {/* Rows */}
               <div className="divide-y divide-gray-200">
-                {vms.map((vm, index) => {
+                {pageVms.map((vm, index) => {
                   const formatPrice = (price) => {
                     if (price === null || price === undefined || price <= 0) return 'N/A';
                     return `$${price.toFixed(4)}`;
@@ -273,6 +287,15 @@ const VMBrowser = () => {
                 })}
               </div>
             </div>
+
+            <Pagination
+              page={safePage}
+              pageSize={pageSize}
+              totalItems={vms.length}
+              onPageChange={setPage}
+              onPageSizeChange={setPageSize}
+            />
+            </>
           )}
         </div>
       </div>

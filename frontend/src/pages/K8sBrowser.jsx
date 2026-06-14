@@ -1,9 +1,10 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { useQueries } from 'react-query';
 import { vmApi } from '../services/api';
 import Layout from '../components/Layout/Layout';
 import K8sFilters from '../components/K8s/K8sFilters';
 import GpuCell from '../components/Common/GpuCell';
+import Pagination from '../components/Common/Pagination';
 import { k8sServices, getProviders } from '../data/k8sServices';
 import { isEligibleWorkerNode } from '../data/k8sNodePools';
 import { Search, ChevronUp, ChevronDown } from 'lucide-react';
@@ -60,6 +61,8 @@ const columns = [
 const K8sBrowser = () => {
   const [filters, setFilters] = useState(defaultFilters);
   const [sortConfig, setSortConfig] = useState({ key: 'price', direction: 'asc' });
+  const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(50);
 
   const selected = useMemo(() => filters.providers || [], [filters.providers]);
 
@@ -176,6 +179,16 @@ const K8sBrowser = () => {
 
   const serviceCount = useMemo(() => new Set(rows.map((r) => r.short)).size, [rows]);
 
+  // Reset to the first page whenever the result set or page size changes.
+  useEffect(() => { setPage(1); }, [filters, sortConfig, pageSize]);
+
+  const totalPages = Math.max(1, Math.ceil(rows.length / pageSize));
+  const safePage = Math.min(page, totalPages);
+  const pageRows = useMemo(
+    () => rows.slice((safePage - 1) * pageSize, safePage * pageSize),
+    [rows, safePage, pageSize]
+  );
+
   const renderCell = (col, r) => {
     switch (col.key) {
       case 'provider':
@@ -253,36 +266,46 @@ const K8sBrowser = () => {
               </button>
             </div>
           ) : (
-            <div className="card overflow-hidden">
-              {/* Header */}
-              <div className="grid grid-cols-12 gap-3 items-center px-4 py-2 bg-gray-50 border-b border-gray-200 text-xs font-medium text-gray-600 uppercase tracking-wide">
-                {columns.map((col) => (
-                  <button
-                    key={col.key}
-                    onClick={() => handleSort(col.key)}
-                    className={`${col.span} flex items-center space-x-1 hover:text-gray-900 transition-colors text-left`}
-                  >
-                    <span>{col.label}</span>{getSortIcon(col.key)}
-                  </button>
-                ))}
+            <>
+              <div className="card overflow-hidden">
+                {/* Header */}
+                <div className="grid grid-cols-12 gap-3 items-center px-4 py-2 bg-gray-50 border-b border-gray-200 text-xs font-medium text-gray-600 uppercase tracking-wide">
+                  {columns.map((col) => (
+                    <button
+                      key={col.key}
+                      onClick={() => handleSort(col.key)}
+                      className={`${col.span} flex items-center space-x-1 hover:text-gray-900 transition-colors text-left`}
+                    >
+                      <span>{col.label}</span>{getSortIcon(col.key)}
+                    </button>
+                  ))}
+                </div>
+
+                {/* Rows — each worker node is a flat top-level row */}
+                <div className="divide-y divide-gray-200">
+                  {pageRows.map((r) => (
+                    <div
+                      key={r.id}
+                      className="grid grid-cols-12 gap-3 items-center px-4 py-2 text-sm hover:bg-gray-50 transition-colors"
+                    >
+                      {columns.map((col) => (
+                        <div key={col.key} className={`${col.span} truncate`}>
+                          {renderCell(col, r)}
+                        </div>
+                      ))}
+                    </div>
+                  ))}
+                </div>
               </div>
 
-              {/* Rows — each worker node is a flat top-level row */}
-              <div className="divide-y divide-gray-200">
-                {rows.map((r) => (
-                  <div
-                    key={r.id}
-                    className="grid grid-cols-12 gap-3 items-center px-4 py-2 text-sm hover:bg-gray-50 transition-colors"
-                  >
-                    {columns.map((col) => (
-                      <div key={col.key} className={`${col.span} truncate`}>
-                        {renderCell(col, r)}
-                      </div>
-                    ))}
-                  </div>
-                ))}
-              </div>
-            </div>
+              <Pagination
+                page={safePage}
+                pageSize={pageSize}
+                totalItems={rows.length}
+                onPageChange={setPage}
+                onPageSizeChange={setPageSize}
+              />
+            </>
           )}
         </div>
       </div>

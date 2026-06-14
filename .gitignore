@@ -205,6 +205,9 @@ cython_debug/
 *.duckdb.bak.*
 *.duckdb.wal.bak.*
 
+# Runtime LLM catalog cache (fetched from models.dev on startup)
+llm_models_cache.json
+
 # Downloaded data directories
 v7/
 v8/

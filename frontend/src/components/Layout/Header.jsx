@@ -1,6 +1,6 @@
 import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { Cloud, BarChart3, Settings, Boxes } from 'lucide-react';
+import { Cloud, BarChart3, Settings, Boxes, Brain } from 'lucide-react';
 
 const Header = () => {
   const location = useLocation();
@@ -8,6 +8,7 @@ const Header = () => {
   const navigation = [
     { name: 'VMs', href: '/', icon: Cloud },
     { name: 'Kubernetes', href: '/k8s', icon: Boxes },
+    { name: 'LLMs', href: '/llms', icon: Brain },
     { name: 'Statistics', href: '/stats', icon: BarChart3 },
     { name: 'Admin', href: '/admin', icon: Settings },
   ];

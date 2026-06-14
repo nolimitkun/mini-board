@@ -84,4 +84,22 @@ export const vmApi = {
   getApiInfo: () => api.get('/'),
 };
 
+// Build a query string from a params object, joining arrays with commas and
+// dropping null/undefined/'' values.
+const buildQuery = (params = {}) => {
+  const qp = new URLSearchParams();
+  Object.entries(params).forEach(([key, value]) => {
+    if (value === null || value === undefined || value === '') return;
+    qp.append(key, Array.isArray(value) ? value.join(',') : value.toString());
+  });
+  const s = qp.toString();
+  return s ? `?${s}` : '';
+};
+
+// LLM model catalog (served by the backend, aggregated from provider sources).
+export const llmApi = {
+  getProviders: () => api.get('/llm/providers'),
+  getModels: (params = {}) => api.get(`/llm/models${buildQuery(params)}`),
+};
+
 export default api;
