@@ -79,14 +79,23 @@ class LLMLoader:
         # Fall back to the serving provider's display name.
         return provider_name
 
-    @staticmethod
-    def _modalities(model: dict) -> List[str]:
+    # models.dev input modality -> our label. "image" is renamed to "vision";
+    # everything else (text, audio, pdf, video, ...) is preserved as-is so
+    # multimodal capabilities aren't silently dropped.
+    _MODALITY_LABELS = {"image": "vision"}
+
+    @classmethod
+    def _modalities(cls, model: dict) -> List[str]:
         inputs = (model.get("modalities") or {}).get("input") or []
-        mods = ["text"]
-        if "image" in inputs:
-            mods.append("vision")
-        if "audio" in inputs:
-            mods.append("audio")
+        mods: List[str] = []
+        for m in inputs:
+            label = cls._MODALITY_LABELS.get(m, m)
+            if label not in mods:
+                mods.append(label)
+        # Ensure text leads the list when present (chat models always have it).
+        if "text" in mods and mods[0] != "text":
+            mods.remove("text")
+            mods.insert(0, "text")
         return mods
 
     def _normalize(self, data: dict) -> List[dict]:
